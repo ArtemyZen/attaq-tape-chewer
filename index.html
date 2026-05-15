@@ -9,13 +9,13 @@
       --bg: #060606;
       --panel: #0d0d0d;
       --panel2: #151515;
-      --text: #f3e7d7;
-      --muted: #a8957f;
-      --accent: #f1a34d;
-      --danger: #d94e3f;
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+      --accent: #f0f0f0;
+      --danger: #d84a4a;
       --line: rgba(255,255,255,.10);
       --shadow: 0 18px 60px rgba(0,0,0,.55);
-      --radius: 22px;
+      --radius: 0px;
     }
 
     * { box-sizing: border-box; }
@@ -24,9 +24,9 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 20% 10%, rgba(241,163,77,.08), transparent 32%),
-        radial-gradient(circle at 80% 0%, rgba(233,95,77,.055), transparent 28%),
-        linear-gradient(135deg, #020202, var(--bg));
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,.035), transparent 32%),
+        radial-gradient(circle at 80% 0%, rgba(255,255,255,.025), transparent 28%),
+        linear-gradient(135deg, #000, var(--bg));
       color: var(--text);
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
@@ -106,8 +106,8 @@
     }
 
     .dropzone {
-      border: 1px dashed rgba(241,163,77,.55);
-      background: rgba(241,163,77,.06);
+      border: 1px dashed rgba(255,255,255,.35);
+      background: rgba(255,255,255,.035);
       border-radius: 18px;
       padding: 20px;
       text-align: center;
@@ -117,8 +117,8 @@
 
     .dropzone:hover, .dropzone.drag {
       transform: translateY(-1px);
-      background: rgba(241,163,77,.12);
-      border-color: var(--accent);
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.62);
     }
 
     .dropzone strong { display: block; margin-bottom: 5px; }
@@ -136,7 +136,7 @@
       border-radius: 999px;
       padding: 11px 16px;
       background: var(--accent);
-      color: #26180a;
+      color: #050505;
       font-weight: 800;
       cursor: pointer;
       transition: transform .12s ease, filter .12s ease, opacity .12s ease;
@@ -147,7 +147,7 @@
     button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
     button.secondary { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); }
     button.danger { background: var(--danger); color: #fff4ee; }
-    button.active { outline: 2px solid rgba(241,163,77,.45); }
+    button.active { outline: 2px solid rgba(255,255,255,.36); }
 
     .status {
       min-height: 20px;
@@ -165,7 +165,7 @@
     canvas {
       width: 100%;
       display: block;
-      background: #100d0b;
+      background: #030303;
       border-radius: 18px;
       border: 1px solid var(--line);
     }
@@ -224,7 +224,7 @@
       border-radius: 16px;
       background:
         linear-gradient(135deg, rgba(255,255,255,.14), transparent 18%),
-        linear-gradient(#d9ccb9, #97866f 48%, #6a5d4f);
+        linear-gradient(#d9d9d9, #8d8d8d 48%, #555);
       border: 2px solid rgba(0,0,0,.28);
       box-shadow:
         0 10px 24px rgba(0,0,0,.25),
@@ -241,7 +241,7 @@
       height: 20px;
       border-radius: 7px;
       background: rgba(255,255,255,.22);
-      color: rgba(40,28,20,.65);
+      color: rgba(0,0,0,.65);
       display: grid;
       place-items: center;
       font-size: 9px;
@@ -256,7 +256,7 @@
       top: 31%;
       height: 42%;
       border-radius: 18px;
-      background: rgba(26,22,18,.78);
+      background: rgba(8,8,8,.82);
       border: 2px solid rgba(255,255,255,.22);
       box-shadow: inset 0 0 20px rgba(0,0,0,.55);
       overflow: hidden;
@@ -270,7 +270,7 @@
       height: 5px;
       transform: translateY(-50%);
       border-radius: 999px;
-      background: linear-gradient(90deg, #24120c, #513322, #24120c);
+      background: linear-gradient(90deg, #111, #444, #111);
     }
 
     .mini-reel {
@@ -281,16 +281,16 @@
       transform: translateY(-50%);
       border-radius: 50%;
       background:
-        radial-gradient(circle, #2c241f 0 16%, transparent 17%),
-        repeating-conic-gradient(from 0deg, #ded3c2 0 12deg, #756653 13deg 24deg);
-      border: 3px solid #d2c3ac;
+        radial-gradient(circle, #111 0 16%, transparent 17%),
+        repeating-conic-gradient(from 0deg, #d8d8d8 0 12deg, #5f5f5f 13deg 24deg);
+      border: 3px solid #cfcfcf;
       box-shadow: inset 0 0 9px rgba(0,0,0,.45), 0 0 0 3px rgba(0,0,0,.15);
     }
 
     .mini-reel.left { left: 15%; }
     .mini-reel.right { right: 15%; }
 
-    .playing .mini-reel.left { animation: miniSpinLeft .8s linear infinite; }
+    .playing .mini-reel.left { animation: miniSpinRight .8s linear infinite; }
     .playing .mini-reel.right { animation: miniSpinRight .72s linear infinite; }
     .playing.chewy .mini-reel { animation-timing-function: steps(8); }
 
@@ -315,7 +315,7 @@
     .mini-vu {
       position: relative;
       border-radius: 14px;
-      background: linear-gradient(#e8c98e, #b38443);
+      background: linear-gradient(#d8d8d8, #7a7a7a);
       border: 1px solid rgba(0,0,0,.35);
       overflow: hidden;
       box-shadow: inset 0 0 14px rgba(0,0,0,.25);
@@ -328,14 +328,14 @@
       transform: translateX(-50%);
       font-size: 11px;
       font-weight: 900;
-      color: rgba(45,28,10,.65);
+      color: rgba(0,0,0,.65);
     }
 
     .mini-needle {
       position: absolute;
       width: 2px;
       height: 50px;
-      background: #3a1b13;
+      background: #101010;
       bottom: -8px;
       left: 50%;
       transform-origin: bottom center;
@@ -351,7 +351,7 @@
       bottom: 7px;
       display: flex;
       justify-content: space-between;
-      color: rgba(45,28,10,.55);
+      color: rgba(0,0,0,.58);
       font-size: 8px;
       font-weight: 800;
     }
@@ -434,6 +434,32 @@
       color: var(--accent);
       font-weight: 800;
       text-decoration: none;
+    }
+
+
+    /* Sharp industrial UI override */
+    header,
+    .badge,
+    .card,
+    .dropzone,
+    button,
+    button.secondary,
+    button.danger,
+    .preset,
+    canvas,
+    .scope-wrap,
+    .scope-wrap canvas,
+    .mini-widget,
+    .mini-cassette,
+    .mini-cassette::before,
+    .mini-cassette-window,
+    .mini-tape-line,
+    .mini-vu,
+    .meter,
+    .knob,
+    .display,
+    input[type="range"] {
+      border-radius: 0 !important;
     }
 
     @media (max-width: 900px) {
@@ -535,8 +561,12 @@
         <h2>Damage Controls</h2>
         <div class="controls" id="controls"></div>
         <div class="presets">
+          <button class="secondary preset" data-preset="gentleChew">Gentle Chew</button>
+          <button class="secondary preset" data-preset="lightWarp">Light Warp</button>
           <button class="secondary preset" data-preset="subtle">Subtle VHS</button>
+          <button class="secondary preset" data-preset="cleanOld">Clean Old Tape</button>
           <button class="secondary preset" data-preset="chewed">Chewed Tape</button>
+          <button class="secondary preset" data-preset="warped">Warped Pitch</button>
           <button class="secondary preset" data-preset="broken">Almost Dead</button>
           <button class="secondary preset" data-preset="reset">Reset</button>
         </div>
@@ -621,10 +651,14 @@
 
     function setPreset(name) {
       const presets = {
-        reset:   { wow: 0, flutter: 0, chew: 0, dropouts: 0, saturation: 0, noise: 0, lowpass: 0, crush: 0 },
-        subtle:  { wow: 12, flutter: 8, chew: 8, dropouts: 5, saturation: 18, noise: 5, lowpass: 15, crush: 0 },
-        chewed:  { wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
-        broken:  { wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
+        reset:       { wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },
+        gentleChew:  { wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
+        lightWarp:   { wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
+        subtle:      { wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
+        cleanOld:    { wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
+        chewed:      { wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
+        warped:      { wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
+        broken:      { wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
       };
       Object.entries(presets[name]).forEach(([id, val]) => {
         state.values[id] = val;
@@ -848,11 +882,11 @@
       const ctx = canvas.getContext('2d');
       const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#100d0b';
+      ctx.fillStyle = '#030303';
       ctx.fillRect(0, 0, w, h);
       const data = buffer.getChannelData(0);
       const step = Math.ceil(data.length / w);
-      ctx.strokeStyle = '#f1a34d';
+      ctx.strokeStyle = '#f0f0f0';
       ctx.lineWidth = 2;
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
@@ -876,7 +910,7 @@
       const w = canvas.width, h = canvas.height;
       const data = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteTimeDomainData(data);
-      c.fillStyle = 'rgba(16,13,11,.28)';
+      c.fillStyle = 'rgba(3,3,3,.28)';
       c.fillRect(0, 0, w, h);
       c.strokeStyle = '#f1a34d';
       c.lineWidth = 3;
