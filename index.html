@@ -786,12 +786,28 @@
       let chewTarget = 1;
       let dropoutHold = 0;
       let dropoutTarget = 1;
+      let lastDropoutsValue = state.values.dropouts;
 
       function tick() {
         if (!state.playing || !state.nodes.source) return;
         const v = state.values;
         const t = ctx.currentTime;
         phase += 1 / 60;
+
+        // Hard bypass for dropouts. This prevents already-triggered dropout events
+        // from continuing after the Dropouts knob is returned to zero.
+        if (v.dropouts <= 0) {
+          dropoutTarget = 1;
+          dropoutHold = 0;
+          if (state.nodes.dropoutGain) {
+            state.nodes.dropoutGain.gain.cancelScheduledValues(t);
+            state.nodes.dropoutGain.gain.setValueAtTime(1, t);
+          }
+        } else if (lastDropoutsValue <= 0 && v.dropouts > 0) {
+          dropoutTarget = 1;
+          dropoutHold = 0;
+        }
+        lastDropoutsValue = v.dropouts;
 
         const wowDepth = v.wow / 100 * .085;
         const flutterDepth = v.flutter / 100 * .026;
@@ -809,17 +825,19 @@
         }
         chewHold--;
 
-        if (dropoutHold <= 0) {
-          const chance = v.dropouts <= 0 ? 0 : .01 + v.dropouts / 100 * .11;
-          if (Math.random() < chance) {
-            dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
-            dropoutHold = 2 + Math.random() * (5 + v.dropouts / 8);
-          } else {
-            dropoutTarget = 1;
-            dropoutHold = 4;
+        if (v.dropouts > 0) {
+          if (dropoutHold <= 0) {
+            const chance = .01 + v.dropouts / 100 * .11;
+            if (Math.random() < chance) {
+              dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
+              dropoutHold = 2 + Math.random() * (5 + v.dropouts / 8);
+            } else {
+              dropoutTarget = 1;
+              dropoutHold = 4;
+            }
           }
+          dropoutHold--;
         }
-        dropoutHold--;
 
         const wow = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
         const flutter = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
@@ -827,7 +845,11 @@
         const rate = Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;
 
         state.nodes.source.playbackRate.setTargetAtTime(rate, t, .035);
-        state.nodes.dropoutGain.gain.setTargetAtTime(dropoutTarget, t, .018);
+        if (v.dropouts > 0) {
+          state.nodes.dropoutGain.gain.setTargetAtTime(dropoutTarget, t, .018);
+        } else {
+          state.nodes.dropoutGain.gain.setValueAtTime(1, t);
+        }
 
         drawScope();
         state.raf = requestAnimationFrame(tick);
@@ -997,17 +1019,22 @@
             }
             chewCounter--;
 
-            if (dropoutCounter <= 0) {
-              const chance = dropoutAmount <= 0 ? 0 : .00012 + dropoutAmount * .0012;
-              if (Math.random() < chance) {
-                dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
-                dropoutCounter = Math.floor(sampleRate * (.015 + Math.random() * (.04 + dropoutAmount * .18)));
-              } else {
-                dropoutTarget = 1;
-                dropoutCounter = Math.floor(sampleRate * .035);
+            if (dropoutAmount > 0) {
+              if (dropoutCounter <= 0) {
+                const chance = .00012 + dropoutAmount * .0012;
+                if (Math.random() < chance) {
+                  dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
+                  dropoutCounter = Math.floor(sampleRate * (.015 + Math.random() * (.04 + dropoutAmount * .18)));
+                } else {
+                  dropoutTarget = 1;
+                  dropoutCounter = Math.floor(sampleRate * .035);
+                }
               }
+              dropoutCounter--;
+            } else {
+              dropoutTarget = 1;
+              dropoutCounter = 0;
             }
-            dropoutCounter--;
 
             const sec = i / sampleRate;
             const wow = Math.sin(sec * 2 * Math.PI * .35) * wowDepth;
