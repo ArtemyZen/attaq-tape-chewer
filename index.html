@@ -578,13 +578,13 @@
 
   <script>
     const PARAMS = [
-      { id: 'wow', name: 'Wow', min: 0, max: 100, value: 18, hint: 'Slow speed and pitch drift.' },
-      { id: 'flutter', name: 'Flutter', min: 0, max: 100, value: 12, hint: 'Fast nervous cassette motor jitter.' },
-      { id: 'chew', name: 'Chew', min: 0, max: 100, value: 22, hint: 'Random pitch dives, tape bends and warps.' },
-      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 10, hint: 'Short signal losses from damaged tape.' },
-      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 28, hint: 'Soft tape overload and compression.' },
-      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 8, hint: 'Tape hiss, dust and analog dirt.' },
-      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 30, hint: 'Cuts highs for a dull cassette sound.' },
+      { id: 'wow', name: 'Wow', min: 0, max: 100, value: 10, hint: 'Slow speed and pitch drift.' },
+      { id: 'flutter', name: 'Flutter', min: 0, max: 100, value: 6, hint: 'Fast nervous cassette motor jitter.' },
+      { id: 'chew', name: 'Chew', min: 0, max: 100, value: 6, hint: 'Random pitch dives, tape bends and warps.' },
+      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 0, hint: 'Short signal losses from damaged tape.' },
+      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 0, hint: 'Soft tape overload and compression.' },
+      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 6, hint: 'Tape hiss, dust and analog dirt.' },
+      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 22, hint: 'Cuts highs for a dull cassette sound.' },
       { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Rough degradation for a nearly dead tape.' }
     ];
 
@@ -719,7 +719,7 @@
       return curve;
     }
 
-    function createChain(ctx, source, destination) {
+    function createChain(ctx, source, destination, startTime = ctx.currentTime + 0.03) {
       const input = ctx.createGain();
       const shaper = ctx.createWaveShaper();
       const filter = ctx.createBiquadFilter();
@@ -733,13 +733,17 @@
       filter.Q.value = .6;
       shaper.oversample = '4x';
       analyser.fftSize = 2048;
+      dropoutGain.gain.value = 1;
+      noiseGain.gain.value = 0;
+      output.gain.value = 0;
 
-      // Short fade-in prevents the click that happens when audio starts
-      // at a non-zero waveform position.
+      // Short delayed fade-in prevents clicks from instant node start,
+      // non-zero waveform starts, and newly created noise buffers.
       const now = ctx.currentTime;
       output.gain.cancelScheduledValues(now);
       output.gain.setValueAtTime(0, now);
-      output.gain.linearRampToValueAtTime(1, now + 0.018);
+      output.gain.setValueAtTime(0, startTime);
+      output.gain.linearRampToValueAtTime(1, startTime + 0.035);
 
       source.connect(input);
       input.connect(shaper);
@@ -755,7 +759,7 @@
       noise.loop = true;
       noise.connect(noiseGain);
       noiseGain.connect(mix);
-      noise.start();
+      noise.start(startTime);
 
       mix.connect(analyser);
       analyser.connect(output);
@@ -876,11 +880,12 @@
       source.loop = state.loop;
       state.source = source;
       state.playing = true;
-      createChain(ctx, source, ctx.destination);
+      const startTime = ctx.currentTime + 0.035;
+      createChain(ctx, source, ctx.destination, startTime);
       source.onended = () => {
         if (!state.loop) stop(false);
       };
-      source.start();
+      source.start(startTime);
       els.play.textContent = 'RESTART';
       els.play.classList.add('active');
       els.stop.classList.remove('active');
