@@ -712,8 +712,9 @@
       const curve = new Float32Array(samples);
       const k = amount * 7;
       for (let i = 0; i < samples; i++) {
-        const x = i * 2 / samples - 1;
-        curve[i] = Math.tanh(x * (1 + k));
+        const x = i * 2 / (samples - 1) - 1;
+        // At 0 saturation this must be a true clean pass-through.
+        curve[i] = amount <= 0 ? x : Math.tanh(x * (1 + k));
       }
       return curve;
     }
@@ -767,8 +768,14 @@
       const sat = v.saturation / 100;
       n.shaper.curve = makeDistortionCurve(sat);
 
-      const cutoff = 18000 - Math.pow(v.lowpass / 100, 1.5) * 16500;
-      n.filter.frequency.setTargetAtTime(Math.max(900, cutoff), now, .03);
+      if (v.lowpass <= 0) {
+        n.filter.type = 'allpass';
+        n.filter.frequency.setTargetAtTime(Math.min(ctx.sampleRate * 0.45, 20000), now, .03);
+      } else {
+        n.filter.type = 'lowpass';
+        const cutoff = 18000 - Math.pow(v.lowpass / 100, 1.5) * 16500;
+        n.filter.frequency.setTargetAtTime(Math.max(900, cutoff), now, .03);
+      }
 
       n.noiseGain.gain.setTargetAtTime(Math.pow(v.noise / 100, 1.7) * .14, now, .03);
     }
@@ -791,7 +798,7 @@
         const chewDepth = v.chew / 100 * .38;
 
         if (chewHold <= 0) {
-          const chance = .015 + v.chew / 100 * .09;
+          const chance = v.chew <= 0 ? 0 : .015 + v.chew / 100 * .09;
           if (Math.random() < chance) {
             chewTarget = 1 - Math.random() * chewDepth;
             chewHold = 4 + Math.random() * 22;
@@ -803,7 +810,7 @@
         chewHold--;
 
         if (dropoutHold <= 0) {
-          const chance = .01 + v.dropouts / 100 * .11;
+          const chance = v.dropouts <= 0 ? 0 : .01 + v.dropouts / 100 * .11;
           if (Math.random() < chance) {
             dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
             dropoutHold = 2 + Math.random() * (5 + v.dropouts / 8);
@@ -912,7 +919,7 @@
       analyser.getByteTimeDomainData(data);
       c.fillStyle = 'rgba(3,3,3,.28)';
       c.fillRect(0, 0, w, h);
-      c.strokeStyle = '#f1a34d';
+      c.strokeStyle = '#f0f0f0';
       c.lineWidth = 3;
       c.beginPath();
       for (let i = 0; i < data.length; i++) {
@@ -968,7 +975,7 @@
         const cutoff = 18000 - Math.pow(muffle, 1.5) * 16500;
         const rc = 1 / (2 * Math.PI * Math.max(900, cutoff));
         const dt = 1 / sampleRate;
-        const alpha = dt / (rc + dt);
+        const alpha = muffle <= 0 ? 1 : dt / (rc + dt);
         const stepSize = Math.max(1, Math.round(1 + crush * 48));
         let held = new Array(channels).fill(0);
 
@@ -979,7 +986,7 @@
           const end = Math.min(length, i + chunk);
           for (; i < end; i++) {
             if (chewCounter <= 0) {
-              const chance = .00018 + values.chew / 100 * .0011;
+              const chance = values.chew <= 0 ? 0 : .00018 + values.chew / 100 * .0011;
               if (Math.random() < chance) {
                 chewTarget = 1 - Math.random() * chewDepth;
                 chewCounter = Math.floor(sampleRate * (.04 + Math.random() * .22));
@@ -991,7 +998,7 @@
             chewCounter--;
 
             if (dropoutCounter <= 0) {
-              const chance = .00012 + dropoutAmount * .0012;
+              const chance = dropoutAmount <= 0 ? 0 : .00012 + dropoutAmount * .0012;
               if (Math.random() < chance) {
                 dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
                 dropoutCounter = Math.floor(sampleRate * (.015 + Math.random() * (.04 + dropoutAmount * .18)));
@@ -1015,9 +1022,11 @@
               let s = input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
               s *= dropoutTarget;
               s += (Math.random() * 2 - 1) * noise;
-              s = Math.tanh(s * (1 + sat * 7));
-              lp[ch] = lp[ch] + alpha * (s - lp[ch]);
-              s = lp[ch];
+              if (sat > 0) s = Math.tanh(s * (1 + sat * 7));
+              if (muffle > 0) {
+                lp[ch] = lp[ch] + alpha * (s - lp[ch]);
+                s = lp[ch];
+              }
               if (crush > 0 && i % stepSize === 0) held[ch] = s;
               if (crush > 0) s = held[ch];
               output[ch][i] = s;
