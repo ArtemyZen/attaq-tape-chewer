@@ -726,12 +726,20 @@
       const dropoutGain = ctx.createGain();
       const noiseGain = ctx.createGain();
       const mix = ctx.createGain();
+      const output = ctx.createGain();
       const analyser = ctx.createAnalyser();
 
       filter.type = 'lowpass';
       filter.Q.value = .6;
       shaper.oversample = '4x';
       analyser.fftSize = 2048;
+
+      // Short fade-in prevents the click that happens when audio starts
+      // at a non-zero waveform position.
+      const now = ctx.currentTime;
+      output.gain.cancelScheduledValues(now);
+      output.gain.setValueAtTime(0, now);
+      output.gain.linearRampToValueAtTime(1, now + 0.018);
 
       source.connect(input);
       input.connect(shaper);
@@ -750,9 +758,10 @@
       noise.start();
 
       mix.connect(analyser);
-      analyser.connect(destination);
+      analyser.connect(output);
+      output.connect(destination);
 
-      state.nodes = { input, shaper, filter, dropoutGain, noiseGain, mix, analyser, source, noise };
+      state.nodes = { input, shaper, filter, dropoutGain, noiseGain, mix, output, analyser, source, noise };
       updateLiveParams();
       startModulation(ctx);
       return state.nodes;
@@ -884,13 +893,36 @@
     function stop(updateStatus = true) {
       if (state.raf) cancelAnimationFrame(state.raf);
       state.raf = null;
-      if (state.source) {
-        try { state.source.stop(); } catch(e) {}
-        try { state.source.disconnect(); } catch(e) {}
+
+      const ctx = state.audioCtx;
+      const sourceToStop = state.source;
+      const nodesToDisconnect = { ...state.nodes };
+
+      if (ctx && nodesToDisconnect.output && sourceToStop) {
+        const now = ctx.currentTime;
+        try {
+          nodesToDisconnect.output.gain.cancelScheduledValues(now);
+          nodesToDisconnect.output.gain.setValueAtTime(nodesToDisconnect.output.gain.value, now);
+          nodesToDisconnect.output.gain.linearRampToValueAtTime(0, now + 0.018);
+          sourceToStop.stop(now + 0.022);
+        } catch(e) {
+          try { sourceToStop.stop(); } catch(err) {}
+        }
+
+        setTimeout(() => {
+          Object.values(nodesToDisconnect).forEach(node => {
+            try { node.disconnect(); } catch(e) {}
+          });
+        }, 40);
+      } else {
+        if (sourceToStop) {
+          try { sourceToStop.stop(); } catch(e) {}
+          try { sourceToStop.disconnect(); } catch(e) {}
+        }
+        Object.values(nodesToDisconnect).forEach(node => {
+          try { node.disconnect(); } catch(e) {}
+        });
       }
-      Object.values(state.nodes).forEach(node => {
-        try { node.disconnect(); } catch(e) {}
-      });
       state.nodes = {};
       state.source = null;
       state.playing = false;
