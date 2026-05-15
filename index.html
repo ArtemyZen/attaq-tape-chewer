@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATTAQ TAPE CHEWER</title>
+  <style>
+    :root {
+      --bg: #060606;
+      --panel: #0d0d0d;
+      --panel2: #151515;
+      --text: #f3e7d7;
+      --muted: #a8957f;
+      --accent: #f1a34d;
+      --danger: #d94e3f;
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(241,163,77,.08), transparent 32%),
+        radial-gradient(circle at 80% 0%, rgba(233,95,77,.055), transparent 28%),
+        linear-gradient(135deg, #020202, var(--bg));
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      display: grid;
+      gap: 14px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 18px 20px;
+      background: rgba(10,10,10,.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 54px);
+      letter-spacing: -0.06em;
+      line-height: .9;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 690px;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+      white-space: nowrap;
+      background: rgba(255,255,255,.025);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(11,11,11,.94);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card h2 {
+      margin: 0;
+      padding: 16px 18px 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+
+    .transport {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .dropzone {
+      border: 1px dashed rgba(241,163,77,.55);
+      background: rgba(241,163,77,.06);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+
+    .dropzone:hover, .dropzone.drag {
+      transform: translateY(-1px);
+      background: rgba(241,163,77,.12);
+      border-color: var(--accent);
+    }
+
+    .dropzone strong { display: block; margin-bottom: 5px; }
+    .dropzone span { color: var(--muted); font-size: 13px; }
+    input[type="file"] { display: none; }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: var(--accent);
+      color: #26180a;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+      font-family: inherit;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    button.secondary { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); }
+    button.danger { background: var(--danger); color: #fff4ee; }
+    button.active { outline: 2px solid rgba(241,163,77,.45); }
+
+    .status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    #downloadArea a {
+      color: var(--accent);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      background: #100d0b;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+    }
+
+    .visual-zone {
+      display: grid;
+      gap: 10px;
+    }
+
+    .scope-wrap {
+      background: rgba(255,255,255,.018);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .scope-wrap canvas {
+      height: 64px;
+      border-radius: 14px;
+    }
+
+    .mini-widgets {
+      display: grid;
+      grid-template-columns: 1.35fr .9fr;
+      gap: 10px;
+    }
+
+    .mini-widget {
+      background: rgba(255,255,255,.018);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 130px;
+    }
+
+    .mini-widget-title {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .mini-cassette-shell {
+      height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .mini-cassette {
+      position: relative;
+      width: min(240px, 96%);
+      aspect-ratio: 1.75 / 1;
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.14), transparent 18%),
+        linear-gradient(#d9ccb9, #97866f 48%, #6a5d4f);
+      border: 2px solid rgba(0,0,0,.28);
+      box-shadow:
+        0 10px 24px rgba(0,0,0,.25),
+        inset 0 2px rgba(255,255,255,.45),
+        inset 0 -10px 18px rgba(0,0,0,.18);
+    }
+
+    .mini-cassette::before {
+      content: "ATTAQ TAPE";
+      position: absolute;
+      top: 8px;
+      left: 18px;
+      right: 18px;
+      height: 20px;
+      border-radius: 7px;
+      background: rgba(255,255,255,.22);
+      color: rgba(40,28,20,.65);
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+
+    .mini-cassette-window {
+      position: absolute;
+      left: 11%;
+      right: 11%;
+      top: 31%;
+      height: 42%;
+      border-radius: 18px;
+      background: rgba(26,22,18,.78);
+      border: 2px solid rgba(255,255,255,.22);
+      box-shadow: inset 0 0 20px rgba(0,0,0,.55);
+      overflow: hidden;
+    }
+
+    .mini-tape-line {
+      position: absolute;
+      left: 14%;
+      right: 14%;
+      top: 50%;
+      height: 5px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #24120c, #513322, #24120c);
+    }
+
+    .mini-reel {
+      position: absolute;
+      top: 50%;
+      width: 36px;
+      height: 36px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #2c241f 0 16%, transparent 17%),
+        repeating-conic-gradient(from 0deg, #ded3c2 0 12deg, #756653 13deg 24deg);
+      border: 3px solid #d2c3ac;
+      box-shadow: inset 0 0 9px rgba(0,0,0,.45), 0 0 0 3px rgba(0,0,0,.15);
+    }
+
+    .mini-reel.left { left: 15%; }
+    .mini-reel.right { right: 15%; }
+
+    .playing .mini-reel.left { animation: miniSpinLeft .8s linear infinite; }
+    .playing .mini-reel.right { animation: miniSpinRight .72s linear infinite; }
+    .playing.chewy .mini-reel { animation-timing-function: steps(8); }
+
+    @keyframes miniSpinLeft {
+      from { transform: translateY(-50%) rotate(0deg); }
+      to { transform: translateY(-50%) rotate(-360deg); }
+    }
+
+    @keyframes miniSpinRight {
+      from { transform: translateY(-50%) rotate(0deg); }
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .mini-vu-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: stretch;
+      height: 92px;
+    }
+
+    .mini-vu {
+      position: relative;
+      border-radius: 14px;
+      background: linear-gradient(#e8c98e, #b38443);
+      border: 1px solid rgba(0,0,0,.35);
+      overflow: hidden;
+      box-shadow: inset 0 0 14px rgba(0,0,0,.25);
+    }
+
+    .mini-vu-label {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(45,28,10,.65);
+    }
+
+    .mini-needle {
+      position: absolute;
+      width: 2px;
+      height: 50px;
+      background: #3a1b13;
+      bottom: -8px;
+      left: 50%;
+      transform-origin: bottom center;
+      transform: rotate(-38deg);
+      transition: transform .08s linear;
+      box-shadow: 0 0 3px rgba(0,0,0,.3);
+    }
+
+    .mini-vu-scale {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      color: rgba(45,28,10,.55);
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    .meters {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .meter {
+      background: rgba(255,255,255,.025);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .meter .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .meter .value { font-size: 20px; font-weight: 800; letter-spacing: -.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .controls {
+      padding: 16px 18px 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .knob {
+      background: rgba(255,255,255,.028);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .knob-face { display: none; }
+    .knob-info { width: 100%; display: grid; gap: 8px; }
+
+    .knob label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 750;
+      font-size: 14px;
+    }
+
+    .knob label span:last-child {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .presets {
+      padding: 0 18px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .footer {
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      padding: 2px;
+    }
+
+    .footer a {
+      color: var(--accent);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      header { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 700px) {
+      .mini-widgets { grid-template-columns: 1fr; }
+      .mini-widget { min-height: auto; }
+    }
+
+    @media (max-width: 560px) {
+      body { padding: 10px; }
+      .controls { grid-template-columns: 1fr; }
+      .meters { grid-template-columns: 1fr 1fr; }
+      header, .card { border-radius: 18px; }
+      .scope-wrap canvas { height: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="recorder">
+    <header>
+      <div>
+        <h1>ATTAQ TAPE CHEWER</h1>
+        <div class="subtitle">A dirty cassette damage emulator for warped pitch, tape chew, dropouts, saturation, hiss and muffled magnetic sadness.</div>
+      </div>
+      <div class="badge">Web Audio API · Offline WAV Render</div>
+    </header>
+
+    <main class="main">
+      <section class="card">
+        <h2>Audio</h2>
+        <div class="transport">
+          <label class="dropzone" id="dropzone">
+            <input id="file" type="file" accept="audio/*" />
+            <strong>Drop audio here or click</strong>
+            <span>mp3, wav, ogg, m4a – browser support may vary</span>
+          </label>
+
+          <div class="buttons">
+            <button id="play" disabled>Play</button>
+            <button id="stop" class="secondary" disabled>Stop</button>
+            <button id="loop" class="secondary" disabled>Loop: Off</button>
+            <button id="render" class="danger" disabled>Render WAV</button>
+          </div>
+
+          <div class="status" id="status">No file loaded.</div>
+          <div class="status" id="downloadArea"></div>
+          <div class="visual-zone">
+            <div class="scope-wrap">
+              <canvas id="scope" width="1200" height="300"></canvas>
+            </div>
+
+            <div class="mini-widgets">
+              <div class="mini-widget cassette-widget">
+                <div class="mini-widget-title">Tape</div>
+                <div class="mini-cassette-shell">
+                  <div class="mini-cassette" id="cassette">
+                    <div class="mini-cassette-window">
+                      <div class="mini-tape-line"></div>
+                      <div class="mini-reel left"></div>
+                      <div class="mini-reel right"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-widget vu-widget">
+                <div class="mini-widget-title">Input Level</div>
+                <div class="mini-vu-wrap">
+                  <div class="mini-vu">
+                    <div class="mini-vu-label">L</div>
+                    <div class="mini-needle" id="needleL"></div>
+                    <div class="mini-vu-scale"><span>-20</span><span>0</span><span>+3</span></div>
+                  </div>
+
+                  <div class="mini-vu">
+                    <div class="mini-vu-label">R</div>
+                    <div class="mini-needle" id="needleR"></div>
+                    <div class="mini-vu-scale"><span>-20</span><span>0</span><span>+3</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="meters">
+            <div class="meter"><div class="label">File</div><div class="value" id="fileName">—</div></div>
+            <div class="meter"><div class="label">Length</div><div class="value" id="duration">—</div></div>
+            <div class="meter"><div class="label">Sample Rate</div><div class="value" id="sampleRate">—</div></div>
+            <div class="meter"><div class="label">Mode</div><div class="value" id="modeText">Stopped</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Damage Controls</h2>
+        <div class="controls" id="controls"></div>
+        <div class="presets">
+          <button class="secondary preset" data-preset="subtle">Subtle VHS</button>
+          <button class="secondary preset" data-preset="chewed">Chewed Tape</button>
+          <button class="secondary preset" data-preset="broken">Almost Dead</button>
+          <button class="secondary preset" data-preset="reset">Reset</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="footer">By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a></div>
+  </div>
+
+  <script>
+    const PARAMS = [
+      { id: 'wow', name: 'Wow', min: 0, max: 100, value: 18, hint: 'Slow speed and pitch drift.' },
+      { id: 'flutter', name: 'Flutter', min: 0, max: 100, value: 12, hint: 'Fast nervous cassette motor jitter.' },
+      { id: 'chew', name: 'Chew', min: 0, max: 100, value: 22, hint: 'Random pitch dives, tape bends and warps.' },
+      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 10, hint: 'Short signal losses from damaged tape.' },
+      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 28, hint: 'Soft tape overload and compression.' },
+      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 8, hint: 'Tape hiss, dust and analog dirt.' },
+      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 30, hint: 'Cuts highs for a dull cassette sound.' },
+      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Rough degradation for a nearly dead tape.' }
+    ];
+
+    const state = {
+      audioCtx: null,
+      buffer: null,
+      source: null,
+      nodes: {},
+      playing: false,
+      loop: false,
+      raf: null,
+      fileName: '',
+      values: Object.fromEntries(PARAMS.map(p => [p.id, p.value]))
+    };
+
+    const els = {
+      file: document.getElementById('file'),
+      dropzone: document.getElementById('dropzone'),
+      play: document.getElementById('play'),
+      stop: document.getElementById('stop'),
+      loop: document.getElementById('loop'),
+      render: document.getElementById('render'),
+      status: document.getElementById('status'),
+      downloadArea: document.getElementById('downloadArea'),
+      controls: document.getElementById('controls'),
+      scope: document.getElementById('scope'),
+      recorder: document.getElementById('recorder'),
+      cassette: document.getElementById('cassette'),
+      needleL: document.getElementById('needleL'),
+      needleR: document.getElementById('needleR'),
+      modeText: document.getElementById('modeText'),
+      fileName: document.getElementById('fileName'),
+      duration: document.getElementById('duration'),
+      sampleRate: document.getElementById('sampleRate')
+    };
+
+    function buildControls() {
+      els.controls.innerHTML = PARAMS.map(p => `
+        <div class="knob">
+          <div class="knob-face" id="${p.id}Knob" style="--rot: ${valueToDeg(p.value)}deg"></div>
+          <div class="knob-info">
+            <label for="${p.id}"><span>${p.name}</span><span id="${p.id}Value">${p.value}</span></label>
+            <input id="${p.id}" type="range" min="${p.min}" max="${p.max}" value="${p.value}" />
+            <div class="hint">${p.hint}</div>
+          </div>
+        </div>
+      `).join('');
+
+      PARAMS.forEach(p => {
+        const slider = document.getElementById(p.id);
+        slider.addEventListener('input', () => {
+          state.values[p.id] = Number(slider.value);
+          document.getElementById(`${p.id}Value`).textContent = slider.value;
+          const knob = document.getElementById(`${p.id}Knob`);
+          if (knob) knob.style.setProperty('--rot', `${valueToDeg(Number(slider.value))}deg`);
+          updateLiveParams();
+        });
+      });
+    }
+
+    function valueToDeg(value) {
+      return -135 + (value / 100) * 270;
+    }
+
+    function setPreset(name) {
+      const presets = {
+        reset:   { wow: 0, flutter: 0, chew: 0, dropouts: 0, saturation: 0, noise: 0, lowpass: 0, crush: 0 },
+        subtle:  { wow: 12, flutter: 8, chew: 8, dropouts: 5, saturation: 18, noise: 5, lowpass: 15, crush: 0 },
+        chewed:  { wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
+        broken:  { wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
+      };
+      Object.entries(presets[name]).forEach(([id, val]) => {
+        state.values[id] = val;
+        const slider = document.getElementById(id);
+        slider.value = val;
+        document.getElementById(`${id}Value`).textContent = val;
+        const knob = document.getElementById(`${id}Knob`);
+        if (knob) knob.style.setProperty('--rot', `${valueToDeg(val)}deg`);
+      });
+      updateLiveParams();
+    }
+
+    function ensureContext() {
+      if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return state.audioCtx;
+    }
+
+    async function loadFile(file) {
+      try {
+        stop();
+        els.downloadArea.innerHTML = '';
+        const ctx = ensureContext();
+        els.status.textContent = 'Decoding audio...';
+        els.modeText.textContent = 'LOADING';
+        const arr = await file.arrayBuffer();
+        state.buffer = await ctx.decodeAudioData(arr);
+        state.fileName = file.name;
+        els.fileName.textContent = shorten(file.name, 18);
+        els.duration.textContent = `${state.buffer.duration.toFixed(1)}s`;
+        els.sampleRate.textContent = `${Math.round(state.buffer.sampleRate / 1000)}k`;
+        els.play.disabled = false;
+        els.stop.disabled = false;
+        els.loop.disabled = false;
+        els.render.disabled = false;
+        els.status.textContent = 'Ready. Press PLAY or RENDER WAV.';
+        els.modeText.textContent = 'READY';
+        drawBufferWaveform(state.buffer);
+      } catch (err) {
+        console.error(err);
+        els.status.textContent = 'Could not read this file. Try WAV or MP3.';
+        els.modeText.textContent = 'ERROR';
+      }
+    }
+
+    function shorten(str, n) {
+      return str.length > n ? str.slice(0, n - 1) + '…' : str;
+    }
+
+    function makeDistortionCurve(amount) {
+      const samples = 4096;
+      const curve = new Float32Array(samples);
+      const k = amount * 7;
+      for (let i = 0; i < samples; i++) {
+        const x = i * 2 / samples - 1;
+        curve[i] = Math.tanh(x * (1 + k));
+      }
+      return curve;
+    }
+
+    function createChain(ctx, source, destination) {
+      const input = ctx.createGain();
+      const shaper = ctx.createWaveShaper();
+      const filter = ctx.createBiquadFilter();
+      const dropoutGain = ctx.createGain();
+      const noiseGain = ctx.createGain();
+      const mix = ctx.createGain();
+      const analyser = ctx.createAnalyser();
+
+      filter.type = 'lowpass';
+      filter.Q.value = .6;
+      shaper.oversample = '4x';
+      analyser.fftSize = 2048;
+
+      source.connect(input);
+      input.connect(shaper);
+      shaper.connect(filter);
+      filter.connect(dropoutGain);
+      dropoutGain.connect(mix);
+
+      const noise = ctx.createBufferSource();
+      const noiseBuffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * 2)), ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      noise.buffer = noiseBuffer;
+      noise.loop = true;
+      noise.connect(noiseGain);
+      noiseGain.connect(mix);
+      noise.start();
+
+      mix.connect(analyser);
+      analyser.connect(destination);
+
+      state.nodes = { input, shaper, filter, dropoutGain, noiseGain, mix, analyser, source, noise };
+      updateLiveParams();
+      startModulation(ctx);
+      return state.nodes;
+    }
+
+    function updateLiveParams() {
+      const n = state.nodes;
+      if (!n.filter) return;
+      const ctx = state.audioCtx;
+      const v = state.values;
+      const now = ctx.currentTime;
+
+      const sat = v.saturation / 100;
+      n.shaper.curve = makeDistortionCurve(sat);
+
+      const cutoff = 18000 - Math.pow(v.lowpass / 100, 1.5) * 16500;
+      n.filter.frequency.setTargetAtTime(Math.max(900, cutoff), now, .03);
+
+      n.noiseGain.gain.setTargetAtTime(Math.pow(v.noise / 100, 1.7) * .14, now, .03);
+    }
+
+    function startModulation(ctx) {
+      let phase = Math.random() * 1000;
+      let chewHold = 0;
+      let chewTarget = 1;
+      let dropoutHold = 0;
+      let dropoutTarget = 1;
+
+      function tick() {
+        if (!state.playing || !state.nodes.source) return;
+        const v = state.values;
+        const t = ctx.currentTime;
+        phase += 1 / 60;
+
+        const wowDepth = v.wow / 100 * .085;
+        const flutterDepth = v.flutter / 100 * .026;
+        const chewDepth = v.chew / 100 * .38;
+
+        if (chewHold <= 0) {
+          const chance = .015 + v.chew / 100 * .09;
+          if (Math.random() < chance) {
+            chewTarget = 1 - Math.random() * chewDepth;
+            chewHold = 4 + Math.random() * 22;
+          } else {
+            chewTarget = 1;
+            chewHold = 8;
+          }
+        }
+        chewHold--;
+
+        if (dropoutHold <= 0) {
+          const chance = .01 + v.dropouts / 100 * .11;
+          if (Math.random() < chance) {
+            dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
+            dropoutHold = 2 + Math.random() * (5 + v.dropouts / 8);
+          } else {
+            dropoutTarget = 1;
+            dropoutHold = 4;
+          }
+        }
+        dropoutHold--;
+
+        const wow = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
+        const flutter = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
+        const randomFlutter = (Math.random() - .5) * flutterDepth * .35;
+        const rate = Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;
+
+        state.nodes.source.playbackRate.setTargetAtTime(rate, t, .035);
+        state.nodes.dropoutGain.gain.setTargetAtTime(dropoutTarget, t, .018);
+
+        drawScope();
+        state.raf = requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    async function play() {
+      if (!state.buffer) return;
+      const ctx = ensureContext();
+      await ctx.resume();
+      stop(false);
+      const source = ctx.createBufferSource();
+      source.buffer = state.buffer;
+      source.loop = state.loop;
+      state.source = source;
+      state.playing = true;
+      createChain(ctx, source, ctx.destination);
+      source.onended = () => {
+        if (!state.loop) stop(false);
+      };
+      source.start();
+      els.play.textContent = 'RESTART';
+      els.play.classList.add('active');
+      els.stop.classList.remove('active');
+      els.recorder.classList.add('playing');
+      els.recorder.classList.toggle('chewy', state.values.chew > 35);
+      els.status.textContent = 'Playing. Twist the knobs.';
+      els.modeText.textContent = 'PLAYING';
+    }
+
+    function stop(updateStatus = true) {
+      if (state.raf) cancelAnimationFrame(state.raf);
+      state.raf = null;
+      if (state.source) {
+        try { state.source.stop(); } catch(e) {}
+        try { state.source.disconnect(); } catch(e) {}
+      }
+      Object.values(state.nodes).forEach(node => {
+        try { node.disconnect(); } catch(e) {}
+      });
+      state.nodes = {};
+      state.source = null;
+      state.playing = false;
+      els.play.textContent = 'PLAY';
+      els.play.classList.remove('active');
+      els.stop.classList.add('active');
+      els.recorder.classList.remove('playing', 'chewy');
+      if (els.needleL) els.needleL.style.transform = 'rotate(-38deg)';
+      if (els.needleR) els.needleR.style.transform = 'rotate(-38deg)';
+      if (updateStatus && state.buffer) {
+        els.status.textContent = 'Stopped.';
+        els.modeText.textContent = 'STOPPED';
+      }
+    }
+
+    function drawBufferWaveform(buffer) {
+      const canvas = els.scope;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#100d0b';
+      ctx.fillRect(0, 0, w, h);
+      const data = buffer.getChannelData(0);
+      const step = Math.ceil(data.length / w);
+      ctx.strokeStyle = '#f1a34d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        let min = 1, max = -1;
+        for (let j = 0; j < step; j++) {
+          const datum = data[(x * step) + j] || 0;
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        ctx.moveTo(x, (1 + min) * h / 2);
+        ctx.lineTo(x, (1 + max) * h / 2);
+      }
+      ctx.stroke();
+    }
+
+    function drawScope() {
+      const analyser = state.nodes.analyser;
+      if (!analyser) return;
+      const canvas = els.scope;
+      const c = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteTimeDomainData(data);
+      c.fillStyle = 'rgba(16,13,11,.28)';
+      c.fillRect(0, 0, w, h);
+      c.strokeStyle = '#f1a34d';
+      c.lineWidth = 3;
+      c.beginPath();
+      for (let i = 0; i < data.length; i++) {
+        const x = i / (data.length - 1) * w;
+        const y = data[i] / 255 * h;
+        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.stroke();
+
+      let sum = 0;
+      for (let i = 0; i < data.length; i += 8) {
+        const x = (data[i] - 128) / 128;
+        sum += x * x;
+      }
+      const rms = Math.sqrt(sum / (data.length / 8));
+      const angle = -38 + Math.min(1, rms * 3.2) * 76;
+      if (els.needleL) els.needleL.style.transform = `rotate(${angle + (Math.random() - .5) * 4}deg)`;
+      if (els.needleR) els.needleR.style.transform = `rotate(${angle + (Math.random() - .5) * 5}deg)`;
+      if (els.recorder) els.recorder.classList.toggle('chewy', state.values.chew > 35 && Math.random() > .22);
+    }
+
+    function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+
+    function processOffline(buffer, values, progressCb) {
+      return new Promise(resolve => {
+        const channels = buffer.numberOfChannels;
+        const length = buffer.length;
+        const sampleRate = buffer.sampleRate;
+        const out = new AudioBuffer({ numberOfChannels: channels, length, sampleRate });
+
+        const input = [];
+        const output = [];
+        for (let ch = 0; ch < channels; ch++) {
+          input.push(buffer.getChannelData(ch));
+          output.push(out.getChannelData(ch));
+        }
+
+        const wowDepth = values.wow / 100 * .085;
+        const flutterDepth = values.flutter / 100 * .026;
+        const chewDepth = values.chew / 100 * .38;
+        const dropoutAmount = values.dropouts / 100;
+        const sat = values.saturation / 100;
+        const noise = Math.pow(values.noise / 100, 1.7) * .14;
+        const muffle = values.lowpass / 100;
+        const crush = values.crush / 100;
+
+        let readPos = 0;
+        let chewTarget = 1;
+        let chewCounter = 0;
+        let dropoutTarget = 1;
+        let dropoutCounter = 0;
+        let lp = new Array(channels).fill(0);
+        const cutoff = 18000 - Math.pow(muffle, 1.5) * 16500;
+        const rc = 1 / (2 * Math.PI * Math.max(900, cutoff));
+        const dt = 1 / sampleRate;
+        const alpha = dt / (rc + dt);
+        const stepSize = Math.max(1, Math.round(1 + crush * 48));
+        let held = new Array(channels).fill(0);
+
+        const chunk = 44100;
+        let i = 0;
+
+        function work() {
+          const end = Math.min(length, i + chunk);
+          for (; i < end; i++) {
+            if (chewCounter <= 0) {
+              const chance = .00018 + values.chew / 100 * .0011;
+              if (Math.random() < chance) {
+                chewTarget = 1 - Math.random() * chewDepth;
+                chewCounter = Math.floor(sampleRate * (.04 + Math.random() * .22));
+              } else {
+                chewTarget = 1;
+                chewCounter = Math.floor(sampleRate * .04);
+              }
+            }
+            chewCounter--;
+
+            if (dropoutCounter <= 0) {
+              const chance = .00012 + dropoutAmount * .0012;
+              if (Math.random() < chance) {
+                dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
+                dropoutCounter = Math.floor(sampleRate * (.015 + Math.random() * (.04 + dropoutAmount * .18)));
+              } else {
+                dropoutTarget = 1;
+                dropoutCounter = Math.floor(sampleRate * .035);
+              }
+            }
+            dropoutCounter--;
+
+            const sec = i / sampleRate;
+            const wow = Math.sin(sec * 2 * Math.PI * .35) * wowDepth;
+            const flutter = Math.sin(sec * 2 * Math.PI * 7.4 + Math.sin(sec * 5)) * flutterDepth;
+            const rate = Math.max(.25, 1 + wow + flutter + (Math.random() - .5) * flutterDepth * .35) * chewTarget;
+            readPos = clamp(readPos + rate, 0, length - 2);
+
+            const idx = Math.floor(readPos);
+            const frac = readPos - idx;
+
+            for (let ch = 0; ch < channels; ch++) {
+              let s = input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
+              s *= dropoutTarget;
+              s += (Math.random() * 2 - 1) * noise;
+              s = Math.tanh(s * (1 + sat * 7));
+              lp[ch] = lp[ch] + alpha * (s - lp[ch]);
+              s = lp[ch];
+              if (crush > 0 && i % stepSize === 0) held[ch] = s;
+              if (crush > 0) s = held[ch];
+              output[ch][i] = s;
+            }
+          }
+
+          progressCb?.(i / length);
+          if (i < length) setTimeout(work, 0);
+          else resolve(out);
+        }
+        work();
+      });
+    }
+
+    function audioBufferToWav(buffer) {
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const format = 1;
+      const bitDepth = 16;
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numChannels * bytesPerSample;
+      const length = buffer.length * numChannels * bytesPerSample;
+      const arrayBuffer = new ArrayBuffer(44 + length);
+      const view = new DataView(arrayBuffer);
+
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      }
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, format, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * blockAlign, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitDepth, true);
+      writeString(36, 'data');
+      view.setUint32(40, length, true);
+
+      let offset = 44;
+      const channels = [];
+      for (let ch = 0; ch < numChannels; ch++) channels.push(buffer.getChannelData(ch));
+      for (let i = 0; i < buffer.length; i++) {
+        for (let ch = 0; ch < numChannels; ch++) {
+          const sample = clamp(channels[ch][i], -1, 1);
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      }
+      return new Blob([arrayBuffer], { type: 'audio/wav' });
+    }
+
+    async function renderWav() {
+      if (!state.buffer) return;
+      els.render.disabled = true;
+      els.downloadArea.innerHTML = '';
+      els.status.textContent = 'Rendering WAV...';
+      els.modeText.textContent = 'RENDERING';
+
+      try {
+        const rendered = await processOffline(state.buffer, { ...state.values }, p => {
+          els.status.textContent = `Rendering WAV... ${Math.round(p * 100)}%`; 
+          els.modeText.textContent = `${Math.round(p * 100)}%`; 
+        });
+
+        const blob = audioBufferToWav(rendered);
+        const url = URL.createObjectURL(blob);
+        const cleanName = (state.fileName || 'audio').replace(/\.[^.]+$/, '');
+        const downloadName = `${cleanName}_tape_chewed.wav`;
+
+        els.downloadArea.innerHTML = `
+          WAV is ready. If the download does not start automatically, click:
+          <a id="manualDownload" href="${url}" download="${downloadName}">Download WAV</a>
+        `;
+
+        const a = document.getElementById('manualDownload');
+
+        // Some browsers block automatic downloads after long async rendering.
+        // The visible link stays on screen as a reliable fallback.
+        setTimeout(() => {
+          try { a.click(); } catch (e) {}
+        }, 50);
+
+        els.status.textContent = 'WAV is ready.';
+        els.modeText.textContent = 'READY';
+      } catch (err) {
+        console.error(err);
+        els.status.textContent = 'Render error. Try a shorter file or WAV/MP3.';
+        els.modeText.textContent = 'ERROR';
+      } finally {
+        els.render.disabled = false;
+      }
+    }
+
+    buildControls();
+
+    els.file.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) loadFile(file);
+    });
+
+    els.dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      els.dropzone.classList.add('drag');
+    });
+    els.dropzone.addEventListener('dragleave', () => els.dropzone.classList.remove('drag'));
+    els.dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      els.dropzone.classList.remove('drag');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(file);
+    });
+
+    els.play.addEventListener('click', play);
+    els.stop.addEventListener('click', () => stop(true));
+    els.loop.addEventListener('click', () => {
+      state.loop = !state.loop;
+      els.loop.textContent = `LOOP ${state.loop ? 'ON' : 'OFF'}`;
+      els.loop.classList.toggle('active', state.loop);
+      if (state.source) state.source.loop = state.loop;
+    });
+    els.render.addEventListener('click', renderWav);
+
+    document.querySelectorAll('.preset').forEach(btn => {
+      btn.addEventListener('click', () => setPreset(btn.dataset.preset));
+    });
+  </script>
+</body>
+</html>
