@@ -1053,16 +1053,21 @@
         const chew = values.chew / 100;
         const dropouts = values.dropouts / 100;
         const saturation = values.saturation / 100;
-        const noise = Math.pow(values.noise / 100, 1.45) * 0.18;
+        const noiseAmount = Math.pow(values.noise / 100, 1.7) * 0.14;
         const muffle = values.lowpass / 100;
         const crush = values.crush / 100;
 
-        const cleanPass = wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noise <= 0 && muffle <= 0 && crush <= 0;
+        const cleanPass = wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;
         if (cleanPass) {
           for (let ch = 0; ch < channels; ch++) output[ch].set(input[ch]);
           progressCb?.(1);
           resolve(out);
           return;
+        }
+
+        function hashNoise(n) {
+          const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+          return (x - Math.floor(x)) * 2 - 1;
         }
 
         function readInterpolated(ch, pos) {
@@ -1072,42 +1077,48 @@
           return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
         }
 
-        function smoothPulse(t, start, dur) {
+        function pulse(t, start, dur) {
           if (t < start || t > start + dur) return 0;
           const x = (t - start) / dur;
           return Math.sin(Math.PI * x);
         }
 
-        // Prebuild deterministic chew/dropout events so short files still render with audible damage.
+        // Important: render must keep the original length exactly.
+        // So we do not accumulate playback position. Instead, we read around the
+        // current sample with a small modulated offset. This behaves much closer
+        // to preview and cannot finish the source early.
+        const maxWowOffset = wow * sampleRate * 0.030;
+        const maxFlutterOffset = flutter * sampleRate * 0.0045;
+        const maxChewOffset = chew * sampleRate * 0.018;
+
         const chewEvents = [];
         if (chew > 0) {
-          const count = Math.max(1, Math.ceil(duration * (0.7 + chew * 3.2)));
+          const count = Math.max(0, Math.floor(duration * (0.25 + chew * 1.4)));
           for (let n = 0; n < count; n++) {
-            const pos = ((n + 0.35 + ((n * 37) % 17) / 31) / count) * Math.max(duration, 0.05);
-            const dur = 0.045 + chew * 0.24 + (((n * 11) % 9) / 9) * 0.08;
-            const depth = (0.08 + chew * 0.42) * (0.65 + (((n * 19) % 13) / 13) * 0.55);
-            chewEvents.push({ start: Math.min(pos, Math.max(0, duration - 0.02)), dur, depth });
+            const start = ((n + 0.5 + (((n * 17) % 11) / 22)) / Math.max(1, count)) * duration;
+            const dur = 0.035 + chew * 0.11;
+            const depth = 0.35 + chew * 0.65;
+            chewEvents.push({ start, dur, depth });
           }
         }
 
         const dropoutEvents = [];
         if (dropouts > 0) {
-          const count = Math.max(1, Math.ceil(duration * (0.6 + dropouts * 4.0)));
+          const count = Math.max(0, Math.floor(duration * (0.2 + dropouts * 2.0)));
           for (let n = 0; n < count; n++) {
-            const pos = ((n + 0.5 + ((n * 23) % 19) / 37) / count) * Math.max(duration, 0.05);
-            const dur = 0.012 + dropouts * 0.13 + (((n * 7) % 8) / 8) * 0.035;
-            const depth = (0.25 + dropouts * 0.72) * (0.75 + (((n * 13) % 11) / 11) * 0.35);
-            dropoutEvents.push({ start: Math.min(pos, Math.max(0, duration - 0.01)), dur, depth: clamp(depth, 0, 0.96) });
+            const start = ((n + 0.45 + (((n * 23) % 13) / 26)) / Math.max(1, count)) * duration;
+            const dur = 0.010 + dropouts * 0.07;
+            const depth = clamp(0.2 + dropouts * 0.65, 0, 0.85);
+            dropoutEvents.push({ start, dur, depth });
           }
         }
 
-        let readPos = 0;
         let lp = new Array(channels).fill(0);
         let held = new Array(channels).fill(0);
-        const crushStep = Math.max(1, Math.round(1 + crush * crush * 90));
+        const crushStep = Math.max(1, Math.round(1 + crush * crush * 52));
 
-        const cutoff = 19500 - Math.pow(muffle, 1.35) * 18000;
-        const rc = 1 / (2 * Math.PI * Math.max(600, cutoff));
+        const cutoff = 18000 - Math.pow(muffle, 1.5) * 16500;
+        const rc = 1 / (2 * Math.PI * Math.max(900, cutoff));
         const dt = 1 / sampleRate;
         const alpha = muffle <= 0 ? 1 : dt / (rc + dt);
 
@@ -1120,36 +1131,38 @@
           for (; i < end; i++) {
             const sec = i / sampleRate;
 
-            let chewDip = 0;
-            for (const ev of chewEvents) chewDip = Math.max(chewDip, smoothPulse(sec, ev.start, ev.dur) * ev.depth);
+            const wowOffset = Math.sin(sec * Math.PI * 2 * 0.35) * maxWowOffset;
+            const wowOffset2 = Math.sin(sec * Math.PI * 2 * 0.12 + 1.8) * maxWowOffset * 0.35;
+            const flutterOffset = Math.sin(sec * Math.PI * 2 * 7.4 + Math.sin(sec * 5)) * maxFlutterOffset;
+            const flutterNoise = hashNoise(Math.floor(sec * 90)) * maxFlutterOffset * 0.18;
 
-            let dropoutDip = 0;
-            for (const ev of dropoutEvents) dropoutDip = Math.max(dropoutDip, smoothPulse(sec, ev.start, ev.dur) * ev.depth);
-            const dropoutGain = dropouts > 0 ? clamp(1 - dropoutDip, 0.02, 1) : 1;
+            let chewOffset = 0;
+            for (const ev of chewEvents) {
+              const p = pulse(sec, ev.start, ev.dur) * ev.depth;
+              if (p > 0) chewOffset += -p * maxChewOffset;
+            }
 
-            const wowRate = Math.sin(sec * Math.PI * 2 * 0.34) * wow * 0.09;
-            const wowRate2 = Math.sin(sec * Math.PI * 2 * 0.11 + 1.7) * wow * 0.045;
-            const flutterRate = Math.sin(sec * Math.PI * 2 * 7.3 + Math.sin(sec * 4.7)) * flutter * 0.032;
-            const flutterRate2 = Math.sin(sec * Math.PI * 2 * 13.1 + 0.4) * flutter * 0.012;
-            const chewWobble = Math.sin(sec * Math.PI * 2 * (2.2 + chew * 3.2)) * chew * 0.02;
-            const chewRate = 1 - chewDip;
-            const rate = Math.max(0.16, 1 + wowRate + wowRate2 + flutterRate + flutterRate2 + chewWobble) * chewRate;
+            let gain = 1;
+            for (const ev of dropoutEvents) {
+              const p = pulse(sec, ev.start, ev.dur);
+              if (p > 0) gain = Math.min(gain, 1 - p * ev.depth);
+            }
+            if (dropouts <= 0) gain = 1;
+
+            const readPos = clamp(i + wowOffset + wowOffset2 + flutterOffset + flutterNoise + chewOffset, 0, length - 2);
 
             for (let ch = 0; ch < channels; ch++) {
               let s = readInterpolated(ch, readPos);
 
-              s *= dropoutGain;
+              s *= gain;
 
-              if (noise > 0) {
-                const hiss = (Math.random() * 2 - 1) * noise;
-                const slowDust = Math.sin(sec * Math.PI * 2 * (19 + ch * 3)) * noise * 0.12;
-                s += hiss + slowDust;
+              if (noiseAmount > 0) {
+                s += hashNoise(i * (ch + 1) + ch * 999) * noiseAmount;
               }
 
               if (saturation > 0) {
-                const drive = 1 + saturation * 10;
+                const drive = 1 + saturation * 7;
                 s = Math.tanh(s * drive) / Math.tanh(drive);
-                s *= 1 - saturation * 0.08;
               }
 
               if (muffle > 0) {
@@ -1167,9 +1180,6 @@
 
               output[ch][i] = clamp(s, -1, 1);
             }
-
-            readPos += rate;
-            if (readPos >= length - 2) readPos = length - 2;
           }
 
           progressCb?.(i / length);
