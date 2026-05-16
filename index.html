@@ -1014,12 +1014,7 @@
         <h2>Damage Controls</h2>
         <div class="controls" id="controls"></div>
         <div class="presets">
-          <button class="secondary preset" data-preset="gentleChew">Gentle Chew</button>
-          <button class="secondary preset" data-preset="lightWarp">Light Warp</button>
-          <button class="secondary preset" data-preset="subtle">Subtle VHS</button>
-          <button class="secondary preset" data-preset="cleanOld">Clean Old Tape</button>
-          <button class="secondary preset" data-preset="chewed">Chewed Tape</button>
-          <button class="secondary preset" data-preset="warped">Warped Pitch</button>
+          <button class="secondary preset" data-preset="cleanOld">Chewed Tape</button>
           <button class="secondary preset" data-preset="broken">Almost Dead</button>
           <button class="secondary preset" data-preset="reset">Reset</button>
         </div>
@@ -1027,10 +1022,12 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.22</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.24</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.24</strong> – Renamed Clean Old Tape preset to Chewed Tape.</div>
+        <div class="devlog-entry"><strong>v 0.1.23</strong> – Made Clean Old Tape the default preset, reduced preset list and removed saturation from Almost Dead.</div>
         <div class="devlog-entry"><strong>v 0.1.22</strong> – Added true dry bypass routing to prevent processing artifacts when color/damage controls are zero.</div>
         <div class="devlog-entry"><strong>v 0.1.21</strong> – Fixed clean zero settings by hard-bypassing saturation, noise, filter coloration and crusher artifacts.</div>
         <div class="devlog-entry"><strong>v 0.1.20</strong> – Added header link to the full ATTAQ Audio Tools collection.</div>
@@ -1053,14 +1050,14 @@
   <script>
     const PARAMS = [
       { id: 'speed', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
-      { id: 'wow', name: 'Wow', min: 0, max: 300, value: 150, hint: 'Slow speed and pitch drift.' },
-      { id: 'flutter', name: 'Flutter', min: 0, max: 300, value: 130, hint: 'Fast nervous cassette motor jitter.' },
-      { id: 'chew', name: 'Chew', min: 0, max: 300, value: 170, hint: 'Random pitch dives, tape bends and warps.' },
-      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 26, hint: 'Short signal losses from damaged tape.' },
-      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 38, hint: 'Soft tape overload and compression.' },
-      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 14, hint: 'Tape hiss, dust and analog dirt.' },
-      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 42, hint: 'Cuts highs for a dull cassette sound.' },
-      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 8, hint: 'Digital bit and sample-rate damage.' }
+      { id: 'wow', name: 'Wow', min: 0, max: 300, value: 55, hint: 'Slow speed and pitch drift.' },
+      { id: 'flutter', name: 'Flutter', min: 0, max: 300, value: 40, hint: 'Fast nervous cassette motor jitter.' },
+      { id: 'chew', name: 'Chew', min: 0, max: 300, value: 45, hint: 'Random pitch dives, tape bends and warps.' },
+      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 0, hint: 'Short signal losses from damaged tape.' },
+      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 0, hint: 'Soft tape overload and compression.' },
+      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 6, hint: 'Tape hiss, dust and analog dirt.' },
+      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 22, hint: 'Cuts highs for a dull cassette sound.' },
+      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Digital bit and sample-rate damage.' }
     ];
 
     const state = {
@@ -1139,14 +1136,9 @@
 
     function setPreset(name) {
       const presets = {
-        reset:       { speed: 100, wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },
-        gentleChew:  { speed: 100, wow: 55,  flutter: 35,  chew: 100, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
-        lightWarp:   { speed: 100, wow: 120, flutter: 90,  chew: 80,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
-        subtle:      { speed: 100, wow: 85,  flutter: 60,  chew: 70,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
-        cleanOld:    { speed: 100, wow: 55,  flutter: 40,  chew: 45,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
-        chewed:      { speed: 100, wow: 150, flutter: 130, chew: 170, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
-        warped:      { speed: 100, wow: 190, flutter: 150, chew: 120, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
-        broken:      { speed: 100, wow: 300, flutter: 300, chew: 300, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
+        reset:    { speed: 100, wow: 0,   flutter: 0,   chew: 0,   dropouts: 0,  saturation: 0, noise: 0,  lowpass: 0,  crush: 0 },
+        cleanOld: { speed: 100, wow: 55,  flutter: 40,  chew: 45,  dropouts: 0,  saturation: 0, noise: 6,  lowpass: 22, crush: 0 },
+        broken:   { speed: 100, wow: 300, flutter: 300, chew: 300, dropouts: 58, saturation: 0, noise: 28, lowpass: 68, crush: 24 }
       };
       Object.entries(presets[name]).forEach(([id, val]) => {
         state.values[id] = val;
