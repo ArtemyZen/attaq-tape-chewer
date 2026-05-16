@@ -570,13 +570,15 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.11</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.12</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
     </div>
   </div>
 
   <script>
     const PARAMS = [
+      { id: 'speed', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
+      { id: 'wow',', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
       { id: 'wow', name: 'Wow', min: 0, max: 150, value: 10, hint: 'Slow speed and pitch drift. Extra range above 100.' },
       { id: 'flutter', name: 'Flutter', min: 0, max: 150, value: 6, hint: 'Fast nervous cassette motor jitter. Extra range above 100.' },
       { id: 'chew', name: 'Chew', min: 0, max: 150, value: 6, hint: 'Random pitch dives, tape bends and warps. Extra range above 100.' },
@@ -644,20 +646,8 @@
       });
     }
 
-    function valueToDeg(value, max = 100) {
-      return -135 + (value / max) * 270;
-    }
-
-    function setPreset(name) {
-      const presets = {
-        reset:       { wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },
-        gentleChew:  { wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
-        lightWarp:   { wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
-        subtle:      { wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
-        cleanOld:    { wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
-        chewed:      { wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
-        warped:      { wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
-        broken:      { wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
+    function valueToDeg(reset:       { speed: 100, wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },resets = gentleChew:  { speed: 100, wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },wpass: 0,lightWarp:   { speed: 100, wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },oise: 0, subtle:      { speed: 100, wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },ation: 0,cleanOld:    { speed: 100, wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },s: 5,  sachewed:      { speed: 100, wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 }, 6,  dropwarped:      { speed: 100, wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },r: 22, chbroken:      { speed: 100, wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
+        broken:      { speed: 100, wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
       };
       Object.entries(presets[name]).forEach(([id, val]) => {
         state.values[id] = val;
@@ -850,14 +840,15 @@
           dropoutHold = 0;
           if (state.nodes.dropoutGain) {
             state.nodes.dropoutGain.gain.cancelScheduledValues(t);
-            state.nodes.dropoutGain.gain.setValueAtTime(1, t);
-          }
-        } else if (lastDropoutsValue <= 0 && v.dropouts > 0) {
-          dropoutTarget = 1;
+            state.nodes.drconst baseSpeed = (v.speed || 100) / 100;
+        const wowDepth = v.wow / 100 * .085;
+        const flutterDepth = v.flutter / 100 * .026;
+        const chewDepth = v.chew / 100 * .38; = 1;
           dropoutHold = 0;
         }
         lastDropoutsValue = v.dropouts;
 
+        const baseSpeed = (v.speed || 100) / 100;
         const wowDepth = v.wow / 100 * .085;
         const flutterDepth = v.flutter / 100 * .026;
         const chewDepth = v.chew / 100 * .38;
@@ -885,13 +876,10 @@
               dropoutHold = 4;
             }
           }
-          dropoutHold--;
-        }
-
-        const wow = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
+      const rate = baseSpeed * Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;.PI * .35) * wowDepth;
         const flutter = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
         const randomFlutter = (Math.random() - .5) * flutterDepth * .35;
-        const rate = Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;
+        const rate = baseSpeed * Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;
 
         state.nodes.source.playbackRate.setTargetAtTime(rate, t, .035);
         if (v.dropouts > 0) {
@@ -1045,25 +1033,22 @@
         if (el) values[p.id] = Number(el.value);
       });
       return values;
-    }
-
-    function processOffline(buffer, values, progressCb) {
-      return new Promise(resolve => {
+  const outLength = Math.max(1, Math.round(length / Math.max(0.05, (values.speed || 100) / 100)));
+        const out = new AudioBuffer({ numberOfChannels: channels, length: outLength, sampleRate });Promise(resolve => {
         const channels = buffer.numberOfChannels;
         const length = buffer.length;
         const sampleRate = buffer.sampleRate;
         const duration = length / sampleRate;
-        const out = new AudioBuffer({ numberOfChannels: channels, length, sampleRate });
+        const outconst baseSpeed = (values.speed || 100) / 100;
+        const wow = values.wow / 100;
+        const flutter = values.flutter / 100;
+        const chew = values.chew / 100;ioBuffer({ numberOfChannels: channels, length: outLength, sampleRate });
 
         const input = [];
         const output = [];
         for (let ch = 0; ch < channels; ch++) {
           input.push(buffer.getChannelData(ch));
-          output.push(out.getChannelData(ch));
-        }
-
-        const wow = values.wow / 100;
-        const flutter = values.flutter / 100;
+          output.push(out.getChannelData(chconst cleanPass = baseSpeed === 1 && wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;utter / 100;
         const chew = values.chew / 100;
         const dropouts = values.dropouts / 100;
         const saturation = values.saturation / 100;
@@ -1071,7 +1056,7 @@
         const muffle = values.lowpass / 100;
         const crush = values.crush / 100;
 
-        const cleanPass = wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;
+        const cleanPass = baseSpeed === 1 && wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;
         if (cleanPass) {
           for (let ch = 0; ch < channels; ch++) output[ch].set(input[ch]);
           progressCb?.(1);
@@ -1088,9 +1073,8 @@
           return hash01(n) * 2 - 1;
         }
 
-        function readInterpolated(ch, pos) {
-          const safe = clamp(pos, 0, length - 2);
-          const idx = Math.floor(safe);
+        function readInterpolated(ch, poconst outputDuration = outLength / sampleRate;
+        const tickCount = Math.max(1, Math.ceil(outputDuration * tickRate));   const idx = Math.floor(safe);
           const frac = safe - idx;
           return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
         }
@@ -1099,7 +1083,8 @@
         // it modulates tape speed/playbackRate. Then the accumulated reading
         // speed is normalized so exported WAV keeps the original duration.
         const tickRate = 60;
-        const tickCount = Math.max(1, Math.ceil(duration * tickRate));
+        const outputDuration = outLength / sampleRate;
+        const tickCount = Math.max(1, Math.ceil(outputDuration * tickRate));
         const rates = new Float32Array(tickCount);
         const gains = new Float32Array(tickCount);
 
@@ -1146,9 +1131,7 @@
           } else {
             dropoutTarget = 1;
             dropoutHold = 0;
-          }
-
-          const wowRate = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
+ const rateScale = baseSpeed / avgRate;wRate = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
           const flutterRate = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
           const randomFlutter = hashNoise(t * 19 + 4) * flutterDepth * .175;
           const rate = Math.max(.25, 1 + wowRate + flutterRate + randomFlutter) * chewTarget;
@@ -1159,10 +1142,9 @@
         }
 
         const avgRate = rateSum / tickCount || 1;
-        const rateScale = 1 / avgRate;
+        const rateScale = baseSpeed / avgRate;
         let readPos = 0;
-        let lp = new Array(channels).fill(0);
-        let held = new Array(channels).fill(0);
+        let lp =const end = Math.min(outLength, i + chunk);t held = new Array(channels).fill(0);
         let crushCounter = new Array(channels).fill(0);
         const crushStep = Math.max(1, Math.round(1 + crush * crush * 52));
 
@@ -1175,7 +1157,7 @@
         let i = 0;
 
         function work() {
-          const end = Math.min(length, i + chunk);
+          const end = Math.min(outLength, i + chunk);
 
           for (; i < end; i++) {
             const sec = i / sampleRate;
@@ -1203,9 +1185,8 @@
               }
 
               if (crush > 0) {
-                if (crushCounter[ch] <= 0) {
-                  held[ch] = s;
-                  crushCounter[ch] = crushStep;
+                if (crusprogressCb?.(i / outLength);
+          if (i < outLength) setTimeout(work, 0);rushCounter[ch] = crushStep;
                 }
                 crushCounter[ch]--;
                 s = held[ch];
@@ -1221,8 +1202,8 @@
             if (readPos > length - 2) readPos = length - 2;
           }
 
-          progressCb?.(i / length);
-          if (i < length) setTimeout(work, 0);
+          progressCb?.(i / outLength);
+          if (i < outLength) setTimeout(
           else resolve(out);
         }
 
