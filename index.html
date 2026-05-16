@@ -361,12 +361,57 @@
     .meter .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
     .meter .value { font-size: 20px; font-weight: 800; letter-spacing: -.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .live-record-panel {
+    .live-record-panel,
+    .created-track {
       display: grid;
       gap: 10px;
       border: 1px solid var(--line);
       background: rgba(255,255,255,.018);
       padding: 12px;
+    }
+
+    .created-track[hidden] {
+      display: none;
+    }
+
+    .created-track-title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .created-track audio {
+      width: 100%;
+      height: 38px;
+    }
+
+    .created-track-actions {
+      display: flex;
+      justify-content: center;
+    }
+
+    .created-track-actions a {
+      display: inline-block;
+      min-width: 180px;
+      text-align: center;
+      color: #f0f0f0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.018) 35%, rgba(0,0,0,.3)),
+        linear-gradient(135deg, #111 0%, #1b1b1b 45%, #090909 100%);
+      border: 1px solid rgba(255,255,255,.15);
+      padding: 11px 16px;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.75),
+        0 6px 14px rgba(0,0,0,.32);
+    }
+
+    .created-track-actions a:hover {
+      filter: brightness(1.08);
     }
 
     .live-record-title {
@@ -559,6 +604,7 @@
     .knob,
     .display,
     .live-record-panel,
+    .created-track,
     .devlog,
     input[type="range"] {
       border-radius: 0 !important;
@@ -645,6 +691,7 @@
     .mini-widget,
     .display,
     .live-record-panel,
+    .created-track,
     .devlog {
       position: relative;
       overflow: hidden;
@@ -669,6 +716,7 @@
     .mini-widget::before,
     .display::before,
     .live-record-panel::before,
+    .created-track::before,
     .devlog::before {
       content: "";
       position: absolute;
@@ -695,6 +743,7 @@
     .mini-widget::after,
     .display::after,
     .live-record-panel::after,
+    .created-track::after,
     .devlog::after {
       content: "";
       position: absolute;
@@ -716,6 +765,7 @@
     .mini-widget > *,
     .display > *,
     .live-record-panel > *,
+    .created-track > *,
     .devlog > * {
       position: relative;
       z-index: 1;
@@ -952,6 +1002,13 @@
 
           <div class="status" id="status">No file loaded.</div>
           <div class="status" id="downloadArea"></div>
+          <div class="created-track" id="createdTrack" hidden>
+            <div class="created-track-title">Created Track</div>
+            <audio id="createdAudio" controls></audio>
+            <div class="created-track-actions">
+              <a id="createdDownload" href="#" download>Download WAV</a>
+            </div>
+          </div>
           <div class="visual-zone">
             <div class="scope-wrap">
               <canvas id="scope" width="1200" height="300"></canvas>
@@ -1022,11 +1079,10 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.24</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.23</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
-        <div class="devlog-entry"><strong>v 0.1.24</strong> – Renamed Clean Old Tape preset to Chewed Tape.</div>
         <div class="devlog-entry"><strong>v 0.1.23</strong> – Made Clean Old Tape the default preset, reduced preset list and removed saturation from Almost Dead.</div>
         <div class="devlog-entry"><strong>v 0.1.22</strong> – Added true dry bypass routing to prevent processing artifacts when color/damage controls are zero.</div>
         <div class="devlog-entry"><strong>v 0.1.21</strong> – Fixed clean zero settings by hard-bypassing saturation, noise, filter coloration and crusher artifacts.</div>
@@ -1094,6 +1150,9 @@
       liveRecordDownload: document.getElementById('liveRecordDownload'),
       status: document.getElementById('status'),
       downloadArea: document.getElementById('downloadArea'),
+      createdTrack: document.getElementById('createdTrack'),
+      createdAudio: document.getElementById('createdAudio'),
+      createdDownload: document.getElementById('createdDownload'),
       controls: document.getElementById('controls'),
       scope: document.getElementById('scope'),
       recorder: document.getElementById('recorder'),
@@ -1163,6 +1222,7 @@
       try {
         stop();
         els.downloadArea.innerHTML = '';
+        hideCreatedTrack();
         const ctx = ensureContext();
         els.status.textContent = 'Decoding audio...';
         els.modeText.textContent = 'LOADING';
@@ -1895,6 +1955,25 @@
       return audioBufferToWav(buffer);
     }
 
+    function hideCreatedTrack() {
+      if (!els.createdTrack) return;
+      if (els.createdAudio?.src) URL.revokeObjectURL(els.createdAudio.src);
+      els.createdTrack.hidden = true;
+      els.createdAudio.removeAttribute('src');
+      els.createdAudio.load();
+      els.createdDownload.removeAttribute('href');
+      els.createdDownload.removeAttribute('download');
+    }
+
+    function showCreatedTrack(blob, downloadName, label = 'WAV track is ready.') {
+      const url = URL.createObjectURL(blob);
+      els.createdAudio.src = url;
+      els.createdDownload.href = url;
+      els.createdDownload.download = downloadName;
+      els.createdTrack.hidden = false;
+      els.downloadArea.textContent = label;
+    }
+
     function finishLiveRecording() {
       const chunks = state.recordChunks.slice();
       const sampleRate = state.recordSampleRate || 44100;
@@ -1927,6 +2006,7 @@
       const downloadName = `${cleanName}_live_tape_record.wav`;
 
       els.liveRecordDownload.innerHTML = `Live WAV recording is ready: <a href="${url}" download="${downloadName}">Download Live WAV</a>`;
+      showCreatedTrack(blob, downloadName, 'Live WAV recording is ready.');
       els.liveRecordStatus.textContent = 'Live WAV recording finished.';
       els.liveRecordPanel.classList.remove('recording');
       els.recordLive.disabled = false;
@@ -1944,35 +2024,23 @@
       if (!state.buffer) return;
       els.render.disabled = true;
       els.downloadArea.innerHTML = '';
-      els.status.textContent = 'Rendering WAV...';
+      hideCreatedTrack();
+      els.status.textContent = 'Creating track...';
       els.modeText.textContent = 'RENDERING';
 
       try {
         const renderValues = getCurrentValues();
         const rendered = await processOffline(state.buffer, renderValues, p => {
-          els.status.textContent = `Rendering WAV... ${Math.round(p * 100)}%`; 
+          els.status.textContent = `Creating track... ${Math.round(p * 100)}%`;
           els.modeText.textContent = `${Math.round(p * 100)}%`; 
         });
 
         const blob = audioBufferToWav(rendered);
-        const url = URL.createObjectURL(blob);
         const cleanName = (state.fileName || 'audio').replace(/\.[^.]+$/, '');
         const downloadName = `${cleanName}_tape_chewed.wav`;
 
-        els.downloadArea.innerHTML = `
-          WAV is ready. If the download does not start automatically, click:
-          <a id="manualDownload" href="${url}" download="${downloadName}">Download WAV</a>
-        `;
-
-        const a = document.getElementById('manualDownload');
-
-        // Some browsers block automatic downloads after long async rendering.
-        // The visible link stays on screen as a reliable fallback.
-        setTimeout(() => {
-          try { a.click(); } catch (e) {}
-        }, 50);
-
-        els.status.textContent = 'WAV is ready.';
+        showCreatedTrack(blob, downloadName, 'Created track is ready. Listen below or download WAV.');
+        els.status.textContent = 'Created track is ready.';
         els.modeText.textContent = 'READY';
       } catch (err) {
         console.error(err);
