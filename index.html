@@ -361,6 +361,44 @@
     .meter .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
     .meter .value { font-size: 20px; font-weight: 800; letter-spacing: -.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+    .live-record-panel {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.018);
+      padding: 12px;
+    }
+
+    .live-record-title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .live-record-hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .live-record-panel.recording {
+      border-color: rgba(216,74,74,.65);
+      box-shadow: inset 0 0 18px rgba(216,74,74,.08), 0 0 18px rgba(216,74,74,.08);
+    }
+
+    .live-record-panel.recording .live-record-title::after {
+      content: " · REC";
+      color: #ff6b5d;
+    }
+
+    #liveRecordDownload a {
+      color: var(--accent);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
     .controls {
       padding: 16px 18px 18px;
       display: grid;
@@ -520,6 +558,7 @@
     .meter,
     .knob,
     .display,
+    .live-record-panel,
     .devlog,
     input[type="range"] {
       border-radius: 0 !important;
@@ -605,6 +644,7 @@
     .scope-wrap,
     .mini-widget,
     .display,
+    .live-record-panel,
     .devlog {
       position: relative;
       overflow: hidden;
@@ -628,6 +668,7 @@
     .scope-wrap::before,
     .mini-widget::before,
     .display::before,
+    .live-record-panel::before,
     .devlog::before {
       content: "";
       position: absolute;
@@ -653,6 +694,7 @@
     .scope-wrap::after,
     .mini-widget::after,
     .display::after,
+    .live-record-panel::after,
     .devlog::after {
       content: "";
       position: absolute;
@@ -673,6 +715,7 @@
     .scope-wrap > *,
     .mini-widget > *,
     .display > *,
+    .live-record-panel > *,
     .devlog > * {
       position: relative;
       z-index: 1;
@@ -878,6 +921,17 @@
             <div class="meter"><div class="label">Sample Rate</div><div class="value" id="sampleRate">—</div></div>
             <div class="meter"><div class="label">Mode</div><div class="value" id="modeText">Stopped</div></div>
           </div>
+
+          <div class="live-record-panel" id="liveRecordPanel">
+            <div class="live-record-title">Live Record</div>
+            <div class="buttons">
+              <button id="recordLive" class="secondary" disabled>Record Live</button>
+              <button id="stopRecord" class="danger" disabled>Stop Record</button>
+            </div>
+            <div class="live-record-hint">Records the actual preview output in realtime, including knob movements. Export format: WAV.</div>
+            <div class="status" id="liveRecordStatus">Live recorder is idle.</div>
+            <div class="status" id="liveRecordDownload"></div>
+          </div>
         </div>
       </section>
 
@@ -898,10 +952,11 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.17</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.18</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.18</strong> – Added experimental Live Record for realtime preview capture and WAV export.</div>
         <div class="devlog-entry"><strong>v 0.1.17</strong> – Updated preset Wow, Flutter and Chew values for the 300 range.</div>
         <div class="devlog-entry"><strong>v 0.1.16</strong> – Extended Wow, Flutter and Chew ranges to 300.</div>
         <div class="devlog-entry"><strong>v 0.1.15</strong> – Added scratched black metal UI skin.</div>
@@ -937,6 +992,14 @@
       playing: false,
       loop: false,
       raf: null,
+      recording: false,
+      mediaDest: null,
+      mediaRecorder: null,
+      recordProcessor: null,
+      recordSilentGain: null,
+      recordChunks: [],
+      recordSampleRate: 44100,
+      recordChannels: 2,
       fileName: '',
       values: Object.fromEntries(PARAMS.map(p => [p.id, p.value]))
     };
@@ -948,6 +1011,11 @@
       stop: document.getElementById('stop'),
       loop: document.getElementById('loop'),
       render: document.getElementById('render'),
+      recordLive: document.getElementById('recordLive'),
+      stopRecord: document.getElementById('stopRecord'),
+      liveRecordPanel: document.getElementById('liveRecordPanel'),
+      liveRecordStatus: document.getElementById('liveRecordStatus'),
+      liveRecordDownload: document.getElementById('liveRecordDownload'),
       status: document.getElementById('status'),
       downloadArea: document.getElementById('downloadArea'),
       controls: document.getElementById('controls'),
@@ -1037,6 +1105,7 @@
         els.stop.disabled = false;
         els.loop.disabled = false;
         els.render.disabled = false;
+        els.recordLive.disabled = false;
         els.status.textContent = 'Ready. Press PLAY or RENDER WAV.';
         els.modeText.textContent = 'READY';
         drawBufferWaveform(state.buffer);
@@ -1142,6 +1211,28 @@
       mix.connect(analyser);
       analyser.connect(output);
       output.connect(destination);
+
+      if (state.recording) {
+        state.recordSampleRate = ctx.sampleRate;
+        state.recordChannels = 2;
+        state.recordProcessor = ctx.createScriptProcessor(4096, 2, 2);
+        state.recordSilentGain = ctx.createGain();
+        state.recordSilentGain.gain.value = 0;
+
+        state.recordProcessor.onaudioprocess = (event) => {
+          if (!state.recording) return;
+          const inputBuffer = event.inputBuffer;
+          const left = new Float32Array(inputBuffer.getChannelData(0));
+          const right = inputBuffer.numberOfChannels > 1
+            ? new Float32Array(inputBuffer.getChannelData(1))
+            : new Float32Array(inputBuffer.getChannelData(0));
+          state.recordChunks.push([left, right]);
+        };
+
+        output.connect(state.recordProcessor);
+        state.recordProcessor.connect(state.recordSilentGain);
+        state.recordSilentGain.connect(destination);
+      }
 
       state.nodes = { input, shaper, filter, crusher, dropoutGain, noiseGain, mix, output, analyser, source, noise };
       updateLiveParams();
@@ -1262,7 +1353,10 @@
       const startTime = ctx.currentTime + 0.035;
       createChain(ctx, source, ctx.destination, startTime);
       source.onended = () => {
-        if (!state.loop) stop(false);
+        if (!state.loop) {
+          if (state.recording) stopLiveRecording(true);
+          else stop(false);
+        }
       };
       source.start(startTime);
       els.play.textContent = 'RESTART';
@@ -1618,6 +1712,98 @@
       return new Blob([arrayBuffer], { type: 'audio/wav' });
     }
 
+    async function startLiveRecording() {
+      if (!state.buffer || state.recording) return;
+
+      const ctx = ensureContext();
+      await ctx.resume();
+
+      stop(false);
+      state.recordChunks = [];
+      state.recordSampleRate = ctx.sampleRate;
+      state.recordChannels = 2;
+      state.recording = true;
+
+      els.liveRecordPanel.classList.add('recording');
+      els.liveRecordStatus.textContent = 'Recording live preview to WAV... move the sliders now.';
+      els.liveRecordDownload.innerHTML = '';
+      els.recordLive.disabled = true;
+      els.stopRecord.disabled = false;
+
+      await play();
+    }
+
+    function mergeRecordedChunks(chunks, channels = 2) {
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk[0].length, 0);
+      const merged = Array.from({ length: channels }, () => new Float32Array(totalLength));
+      let offset = 0;
+
+      chunks.forEach(chunk => {
+        for (let ch = 0; ch < channels; ch++) {
+          const data = chunk[ch] || chunk[0];
+          merged[ch].set(data, offset);
+        }
+        offset += chunk[0].length;
+      });
+
+      return merged;
+    }
+
+    function recordedChannelsToWav(channelData, sampleRate) {
+      const numChannels = channelData.length;
+      const length = channelData[0]?.length || 0;
+      const buffer = new AudioBuffer({ numberOfChannels: numChannels, length: Math.max(1, length), sampleRate });
+      for (let ch = 0; ch < numChannels; ch++) {
+        buffer.copyToChannel(channelData[ch] || new Float32Array(length), ch);
+      }
+      return audioBufferToWav(buffer);
+    }
+
+    function finishLiveRecording() {
+      const chunks = state.recordChunks.slice();
+      const sampleRate = state.recordSampleRate || 44100;
+      const channels = state.recordChannels || 2;
+
+      if (state.recordProcessor) {
+        try { state.recordProcessor.disconnect(); } catch(e) {}
+        state.recordProcessor.onaudioprocess = null;
+      }
+      if (state.recordSilentGain) {
+        try { state.recordSilentGain.disconnect(); } catch(e) {}
+      }
+
+      state.recordProcessor = null;
+      state.recordSilentGain = null;
+      state.recordChunks = [];
+
+      if (!chunks.length) {
+        els.liveRecordStatus.textContent = 'No live audio was captured.';
+        els.liveRecordPanel.classList.remove('recording');
+        els.recordLive.disabled = false;
+        els.stopRecord.disabled = true;
+        return;
+      }
+
+      const merged = mergeRecordedChunks(chunks, channels);
+      const blob = recordedChannelsToWav(merged, sampleRate);
+      const url = URL.createObjectURL(blob);
+      const cleanName = (state.fileName || 'audio').replace(/\.[^.]+$/, '');
+      const downloadName = `${cleanName}_live_tape_record.wav`;
+
+      els.liveRecordDownload.innerHTML = `Live WAV recording is ready: <a href="${url}" download="${downloadName}">Download Live WAV</a>`;
+      els.liveRecordStatus.textContent = 'Live WAV recording finished.';
+      els.liveRecordPanel.classList.remove('recording');
+      els.recordLive.disabled = false;
+      els.stopRecord.disabled = true;
+    }
+
+    function stopLiveRecording(autoEnded = false) {
+      if (!state.recording) return;
+      state.recording = false;
+      if (!autoEnded) stop(true);
+      setTimeout(finishLiveRecording, 60);
+    }
+
     async function renderWav() {
       if (!state.buffer) return;
       els.render.disabled = true;
@@ -1689,6 +1875,8 @@
       if (state.source) state.source.loop = state.loop;
     });
     els.render.addEventListener('click', renderWav);
+    els.recordLive.addEventListener('click', startLiveRecording);
+    els.stopRecord.addEventListener('click', () => stopLiveRecording(false));
 
     document.querySelectorAll('.preset').forEach(btn => {
       btn.addEventListener('click', () => setPreset(btn.dataset.preset));
