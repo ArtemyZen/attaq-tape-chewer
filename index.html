@@ -316,7 +316,7 @@
       transform: translateX(-50%);
       font-size: 11px;
       font-weight: 900;
-      color: rgba(0,0,0,.65);
+      color: rgba(40,18,0,.68);
     }
 
     .mini-needle {
@@ -339,7 +339,7 @@
       bottom: 7px;
       display: flex;
       justify-content: space-between;
-      color: rgba(0,0,0,.58);
+      color: rgba(40,18,0,.6);
       font-size: 8px;
       font-weight: 800;
     }
@@ -542,6 +542,267 @@
       header, .card { border-radius: 18px; }
       .scope-wrap canvas { height: 56px; }
     }
+
+    /* v 0.1.15 — scratched black metal skin */
+    :root {
+      --bg: #030303;
+      --panel: #090909;
+      --panel2: #111;
+      --text: #f1f1f1;
+      --muted: #8d8d8d;
+      --accent: #e2e2e2;
+      --danger: #b83f3f;
+      --line: rgba(255,255,255,.13);
+      --shadow: 0 18px 60px rgba(0,0,0,.68);
+      --radius: 0px;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,.055), transparent 28%),
+        radial-gradient(circle at 78% 0%, rgba(255,255,255,.025), transparent 30%),
+        linear-gradient(135deg, #000 0%, #040404 38%, #080808 100%) !important;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .38;
+      background:
+        repeating-linear-gradient(115deg, transparent 0 18px, rgba(255,255,255,.03) 19px, transparent 20px, transparent 46px),
+        repeating-linear-gradient(92deg, transparent 0 46px, rgba(255,255,255,.016) 47px, transparent 48px, transparent 96px),
+        linear-gradient(12deg, transparent 0%, rgba(255,255,255,.055) 1%, transparent 2%),
+        linear-gradient(168deg, transparent 10%, rgba(255,255,255,.045) 10.6%, transparent 11.2%),
+        linear-gradient(83deg, transparent 40%, rgba(255,255,255,.038) 40.4%, transparent 40.8%),
+        linear-gradient(132deg, transparent 70%, rgba(255,255,255,.03) 70.5%, transparent 71%);
+      mix-blend-mode: screen;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.03), transparent 18%),
+        radial-gradient(circle at 78% 22%, rgba(255,255,255,.025), transparent 20%),
+        radial-gradient(circle at 34% 74%, rgba(255,255,255,.02), transparent 18%),
+        radial-gradient(circle at 88% 82%, rgba(255,255,255,.02), transparent 16%),
+        repeating-linear-gradient(140deg, transparent 0 24px, rgba(255,255,255,.012) 25px, transparent 26px, transparent 58px);
+      mix-blend-mode: screen;
+    }
+
+    header,
+    .card,
+    .meter,
+    .knob,
+    .dropzone,
+    .scope-wrap,
+    .mini-widget,
+    .display,
+    .devlog {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.065) 0%, rgba(255,255,255,.018) 10%, rgba(0,0,0,.22) 100%),
+        linear-gradient(135deg, #080808 0%, #171717 32%, #090909 66%, #151515 100%) !important;
+      border: 1px solid rgba(255,255,255,.13) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        inset 0 -1px 0 rgba(0,0,0,.78),
+        inset 0 0 26px rgba(255,255,255,.025),
+        inset 0 0 2px rgba(255,255,255,.05),
+        0 14px 42px rgba(0,0,0,.5) !important;
+    }
+
+    header::before,
+    .card::before,
+    .meter::before,
+    .knob::before,
+    .dropzone::before,
+    .scope-wrap::before,
+    .mini-widget::before,
+    .display::before,
+    .devlog::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .34;
+      background:
+        linear-gradient(103deg, transparent 0%, rgba(255,255,255,.07) 1%, transparent 2%),
+        linear-gradient(142deg, transparent 16%, rgba(255,255,255,.055) 16.5%, transparent 17%),
+        linear-gradient(77deg, transparent 44%, rgba(255,255,255,.045) 44.3%, transparent 44.6%),
+        linear-gradient(121deg, transparent 68%, rgba(255,255,255,.05) 68.4%, transparent 68.8%),
+        linear-gradient(27deg, transparent 22%, rgba(255,255,255,.035) 22.4%, transparent 22.8%),
+        repeating-linear-gradient(90deg, transparent 0 12px, rgba(255,255,255,.015) 13px, transparent 14px, transparent 28px),
+        repeating-linear-gradient(135deg, transparent 0 32px, rgba(255,255,255,.016) 33px, transparent 34px, transparent 68px);
+      mix-blend-mode: screen;
+    }
+
+    header::after,
+    .card::after,
+    .meter::after,
+    .knob::after,
+    .dropzone::after,
+    .scope-wrap::after,
+    .mini-widget::after,
+    .display::after,
+    .devlog::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.055), transparent 14%, transparent 86%, rgba(255,255,255,.04)),
+        linear-gradient(to bottom, rgba(255,255,255,.05), transparent 12%, transparent 88%, rgba(0,0,0,.22));
+      opacity: .35;
+      mix-blend-mode: screen;
+    }
+
+    header > *,
+    .card > *,
+    .meter > *,
+    .knob > *,
+    .dropzone > *,
+    .scope-wrap > *,
+    .mini-widget > *,
+    .display > *,
+    .devlog > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,.15) !important;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.018) 35%, rgba(0,0,0,.3)),
+        linear-gradient(135deg, #111 0%, #1b1b1b 45%, #090909 100%) !important;
+      color: #f0f0f0 !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.75),
+        0 6px 14px rgba(0,0,0,.32) !important;
+    }
+
+    button.danger {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.012) 35%, rgba(0,0,0,.32)),
+        linear-gradient(135deg, #3b1111 0%, #742020 45%, #250909 100%) !important;
+      color: #fff2f2 !important;
+    }
+
+    canvas,
+    .scope-wrap canvas {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.14)),
+        #020202 !important;
+      border: 1px solid rgba(255,255,255,.09) !important;
+    }
+
+    .mini-cassette {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.05) 22%, rgba(0,0,0,.10)),
+        linear-gradient(135deg, #f3f3f3 0%, #dcdcdc 45%, #bfbfbf 100%) !important;
+      border: 2px solid rgba(255,255,255,.28) !important;
+      box-shadow:
+        inset 0 1px rgba(255,255,255,.35),
+        inset 0 -1px rgba(0,0,0,.18),
+        inset 0 0 20px rgba(255,255,255,.08),
+        0 10px 24px rgba(0,0,0,.42) !important;
+    }
+
+    .mini-cassette::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background:
+        linear-gradient(118deg, transparent 8%, rgba(255,255,255,.22) 8.6%, transparent 9.2%),
+        linear-gradient(74deg, transparent 42%, rgba(0,0,0,.07) 42.4%, transparent 42.8%),
+        repeating-linear-gradient(90deg, transparent 0 10px, rgba(0,0,0,.025) 11px, transparent 12px, transparent 26px);
+      mix-blend-mode: multiply;
+    }
+
+    .mini-cassette-window {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.14)),
+        rgba(10,10,10,.96) !important;
+      border: 2px solid rgba(255,255,255,.12) !important;
+      box-shadow: inset 0 0 22px rgba(0,0,0,.75) !important;
+    }
+
+    .mini-reel {
+      background:
+        radial-gradient(circle, #080808 0 16%, transparent 17%),
+        repeating-conic-gradient(from 0deg, #d6d6d6 0 12deg, #4c4c4c 13deg 24deg) !important;
+      border-color: #bdbdbd !important;
+    }
+
+    .mini-vu {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 24%, rgba(0,0,0,.16)),
+        linear-gradient(135deg, #f3cf7a 0%, #e8a83b 52%, #b96b1f 100%) !important;
+      border: 1px solid rgba(255,255,255,.14) !important;
+      box-shadow:
+        inset 0 0 18px rgba(255,180,60,.20),
+        inset 0 -10px 18px rgba(0,0,0,.18),
+        0 0 18px rgba(255,170,40,.08) !important;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      background:
+        linear-gradient(180deg, #373737, #121212) !important;
+      border: 1px solid rgba(255,255,255,.25) !important;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      background:
+        linear-gradient(180deg, #f5f5f5, #aaa) !important;
+      border: 1px solid #050505 !important;
+    }
+
+    input[type="range"]::-moz-range-track {
+      background:
+        linear-gradient(180deg, #373737, #121212) !important;
+      border: 1px solid rgba(255,255,255,.25) !important;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      background:
+        linear-gradient(180deg, #f5f5f5, #aaa) !important;
+      border: 1px solid #050505 !important;
+    }
+
+    header,
+    .badge,
+    .card,
+    .dropzone,
+    button,
+    button.secondary,
+    button.danger,
+    .preset,
+    canvas,
+    .scope-wrap,
+    .scope-wrap canvas,
+    .mini-widget,
+    .mini-cassette,
+    .mini-cassette-window,
+    .mini-tape-line,
+    .mini-vu,
+    .meter,
+    .knob,
+    .display,
+    .devlog,
+    input[type="range"] {
+      border-radius: 0 !important;
+    }
   </style>
 </head>
 <body>
@@ -637,10 +898,13 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.14</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.17</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.17</strong> – Updated preset Wow, Flutter and Chew values for the 300 range.</div>
+        <div class="devlog-entry"><strong>v 0.1.16</strong> – Extended Wow, Flutter and Chew ranges to 300.</div>
+        <div class="devlog-entry"><strong>v 0.1.15</strong> – Added scratched black metal UI skin.</div>
         <div class="devlog-entry"><strong>v 0.1.14</strong> – Fixed missing slider visibility in dark sharp UI.</div>
         <div class="devlog-entry"><strong>v 0.1.13</strong> – Added footer devlog.</div>
         <div class="devlog-entry"><strong>v 0.1.12</strong> – Added Tape Speed control for constant speed and pitch change.</div>
@@ -655,14 +919,14 @@
   <script>
     const PARAMS = [
       { id: 'speed', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
-      { id: 'wow', name: 'Wow', min: 0, max: 150, value: 10, hint: 'Slow speed and pitch drift. Extra range above 100.' },
-      { id: 'flutter', name: 'Flutter', min: 0, max: 150, value: 6, hint: 'Fast nervous cassette motor jitter. Extra range above 100.' },
-      { id: 'chew', name: 'Chew', min: 0, max: 150, value: 6, hint: 'Random pitch dives, tape bends and warps. Extra range above 100.' },
-      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 0, hint: 'Short signal losses from damaged tape.' },
-      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 0, hint: 'Soft tape overload and compression.' },
-      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 6, hint: 'Tape hiss, dust and analog dirt.' },
-      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 22, hint: 'Cuts highs for a dull cassette sound.' },
-      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Digital bit and sample-rate damage.' }
+      { id: 'wow', name: 'Wow', min: 0, max: 300, value: 150, hint: 'Slow speed and pitch drift.' },
+      { id: 'flutter', name: 'Flutter', min: 0, max: 300, value: 130, hint: 'Fast nervous cassette motor jitter.' },
+      { id: 'chew', name: 'Chew', min: 0, max: 300, value: 170, hint: 'Random pitch dives, tape bends and warps.' },
+      { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 26, hint: 'Short signal losses from damaged tape.' },
+      { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 38, hint: 'Soft tape overload and compression.' },
+      { id: 'noise', name: 'Noise', min: 0, max: 100, value: 14, hint: 'Tape hiss, dust and analog dirt.' },
+      { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 42, hint: 'Cuts highs for a dull cassette sound.' },
+      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 8, hint: 'Digital bit and sample-rate damage.' }
     ];
 
     const state = {
@@ -729,13 +993,13 @@
     function setPreset(name) {
       const presets = {
         reset:       { speed: 100, wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },
-        gentleChew:  { speed: 100, wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
-        lightWarp:   { speed: 100, wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
-        subtle:      { speed: 100, wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
-        cleanOld:    { speed: 100, wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
-        chewed:      { speed: 100, wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
-        warped:      { speed: 100, wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
-        broken:      { speed: 100, wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
+        gentleChew:  { speed: 100, wow: 55,  flutter: 35,  chew: 100, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
+        lightWarp:   { speed: 100, wow: 120, flutter: 90,  chew: 80,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
+        subtle:      { speed: 100, wow: 85,  flutter: 60,  chew: 70,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
+        cleanOld:    { speed: 100, wow: 55,  flutter: 40,  chew: 45,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
+        chewed:      { speed: 100, wow: 150, flutter: 130, chew: 170, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
+        warped:      { speed: 100, wow: 190, flutter: 150, chew: 120, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
+        broken:      { speed: 100, wow: 300, flutter: 300, chew: 300, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
       };
       Object.entries(presets[name]).forEach(([id, val]) => {
         state.values[id] = val;
