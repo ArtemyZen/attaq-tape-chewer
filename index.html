@@ -390,9 +390,12 @@
     .created-track-actions {
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .created-track-actions a {
+    .created-track-actions a,
+    .created-track-actions button {
       display: inline-block;
       min-width: 180px;
       text-align: center;
@@ -408,6 +411,14 @@
         inset 0 1px 0 rgba(255,255,255,.08),
         inset 0 -1px 0 rgba(0,0,0,.75),
         0 6px 14px rgba(0,0,0,.32);
+    }
+
+    .created-track-actions button {
+      min-width: 150px;
+      color: #fff2f2;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.012) 35%, rgba(0,0,0,.32)),
+        linear-gradient(135deg, #3b1111 0%, #742020 45%, #250909 100%);
     }
 
     .created-track-actions a:hover {
@@ -1007,6 +1018,7 @@
             <audio id="createdAudio" controls></audio>
             <div class="created-track-actions">
               <a id="createdDownload" href="#" download>Download WAV</a>
+              <button id="deleteCreated" class="secondary" type="button">Delete</button>
             </div>
           </div>
           <div class="visual-zone">
@@ -1153,6 +1165,7 @@
       createdTrack: document.getElementById('createdTrack'),
       createdAudio: document.getElementById('createdAudio'),
       createdDownload: document.getElementById('createdDownload'),
+      deleteCreated: document.getElementById('deleteCreated'),
       controls: document.getElementById('controls'),
       scope: document.getElementById('scope'),
       recorder: document.getElementById('recorder'),
@@ -1955,7 +1968,7 @@
       return audioBufferToWav(buffer);
     }
 
-    function hideCreatedTrack() {
+    function hideCreatedTrack(message = '') {
       if (!els.createdTrack) return;
       if (els.createdAudio?.src) URL.revokeObjectURL(els.createdAudio.src);
       els.createdTrack.hidden = true;
@@ -1963,6 +1976,7 @@
       els.createdAudio.load();
       els.createdDownload.removeAttribute('href');
       els.createdDownload.removeAttribute('download');
+      if (message) els.downloadArea.textContent = message;
     }
 
     function showCreatedTrack(blob, downloadName, label = 'WAV track is ready.') {
@@ -2081,6 +2095,7 @@
     els.render.addEventListener('click', renderWav);
     els.recordLive.addEventListener('click', startLiveRecording);
     els.stopRecord.addEventListener('click', () => stopLiveRecording(false));
+    els.deleteCreated.addEventListener('click', () => hideCreatedTrack('Deleted.'));
 
     document.querySelectorAll('.preset').forEach(btn => {
       btn.addEventListener('click', () => setPreset(btn.dataset.preset));
