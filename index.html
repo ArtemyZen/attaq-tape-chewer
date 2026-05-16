@@ -395,7 +395,43 @@
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--accent);
+      height: 22px;
+      display: block;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      background: #2a2a2a;
+      border: 1px solid rgba(255,255,255,.22);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 20px;
+      margin-top: -8px;
+      background: #f0f0f0;
+      border: 1px solid #000;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      background: #2a2a2a;
+      border: 1px solid rgba(255,255,255,.22);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 20px;
+      background: #f0f0f0;
+      border: 1px solid #000;
+      border-radius: 0;
     }
 
     .hint {
@@ -426,6 +462,36 @@
       line-height: 1.35;
     }
 
+    .devlog {
+      margin: 4px auto 0;
+      max-width: 760px;
+      color: #777;
+      font-size: 11px;
+      line-height: 1.45;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.018);
+      padding: 10px 12px;
+    }
+
+    .devlog-title {
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 10px;
+    }
+
+    .devlog-entry {
+      margin: 2px 0;
+    }
+
+    .devlog-entry strong {
+      color: var(--text);
+      font-weight: 800;
+    }
+
     .footer a {
       color: var(--accent);
       font-weight: 800;
@@ -454,6 +520,7 @@
     .meter,
     .knob,
     .display,
+    .devlog,
     input[type="range"] {
       border-radius: 0 !important;
     }
@@ -570,15 +637,24 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.12</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.14</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
+      <div class="devlog">
+        <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.14</strong> – Fixed missing slider visibility in dark sharp UI.</div>
+        <div class="devlog-entry"><strong>v 0.1.13</strong> – Added footer devlog.</div>
+        <div class="devlog-entry"><strong>v 0.1.12</strong> – Added Tape Speed control for constant speed and pitch change.</div>
+        <div class="devlog-entry"><strong>v 0.1.11</strong> – Added beta warning and development status note.</div>
+        <div class="devlog-entry"><strong>v 0.1.10</strong> – Extended Wow, Flutter and Chew ranges to 150.</div>
+        <div class="devlog-entry"><strong>v 0.1.9</strong> – Improved render engine to better match realtime preview.</div>
+        <div class="devlog-entry"><strong>v 0.1.8</strong> – Added visible version number to footer.</div>
+      </div>
     </div>
   </div>
 
   <script>
     const PARAMS = [
       { id: 'speed', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
-      { id: 'wow',', name: 'Tape Speed', min: 50, max: 150, value: 100, hint: 'Constant tape speed and pitch. 100 is original.' },
       { id: 'wow', name: 'Wow', min: 0, max: 150, value: 10, hint: 'Slow speed and pitch drift. Extra range above 100.' },
       { id: 'flutter', name: 'Flutter', min: 0, max: 150, value: 6, hint: 'Fast nervous cassette motor jitter. Extra range above 100.' },
       { id: 'chew', name: 'Chew', min: 0, max: 150, value: 6, hint: 'Random pitch dives, tape bends and warps. Extra range above 100.' },
@@ -646,7 +722,19 @@
       });
     }
 
-    function valueToDeg(reset:       { speed: 100, wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },resets = gentleChew:  { speed: 100, wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },wpass: 0,lightWarp:   { speed: 100, wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },oise: 0, subtle:      { speed: 100, wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },ation: 0,cleanOld:    { speed: 100, wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },s: 5,  sachewed:      { speed: 100, wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 }, 6,  dropwarped:      { speed: 100, wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },r: 22, chbroken:      { speed: 100, wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
+    function valueToDeg(value, max = 100) {
+      return -135 + (value / max) * 270;
+    }
+
+    function setPreset(name) {
+      const presets = {
+        reset:       { speed: 100, wow: 0,  flutter: 0,  chew: 0,  dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 0,  crush: 0 },
+        gentleChew:  { speed: 100, wow: 8,  flutter: 5,  chew: 18, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 8,  crush: 0 },
+        lightWarp:   { speed: 100, wow: 16, flutter: 10, chew: 14, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 4,  crush: 0 },
+        subtle:      { speed: 100, wow: 12, flutter: 8,  chew: 8,  dropouts: 5,  saturation: 18, noise: 5,  lowpass: 15, crush: 0 },
+        cleanOld:    { speed: 100, wow: 10, flutter: 6,  chew: 6,  dropouts: 0,  saturation: 0,  noise: 6,  lowpass: 22, crush: 0 },
+        chewed:      { speed: 100, wow: 34, flutter: 22, chew: 48, dropouts: 26, saturation: 38, noise: 14, lowpass: 42, crush: 8 },
+        warped:      { speed: 100, wow: 46, flutter: 28, chew: 36, dropouts: 0,  saturation: 0,  noise: 0,  lowpass: 12, crush: 0 },
         broken:      { speed: 100, wow: 65, flutter: 44, chew: 82, dropouts: 58, saturation: 62, noise: 28, lowpass: 68, crush: 24 }
       };
       Object.entries(presets[name]).forEach(([id, val]) => {
@@ -840,10 +928,10 @@
           dropoutHold = 0;
           if (state.nodes.dropoutGain) {
             state.nodes.dropoutGain.gain.cancelScheduledValues(t);
-            state.nodes.drconst baseSpeed = (v.speed || 100) / 100;
-        const wowDepth = v.wow / 100 * .085;
-        const flutterDepth = v.flutter / 100 * .026;
-        const chewDepth = v.chew / 100 * .38; = 1;
+            state.nodes.dropoutGain.gain.setValueAtTime(1, t);
+          }
+        } else if (lastDropoutsValue <= 0 && v.dropouts > 0) {
+          dropoutTarget = 1;
           dropoutHold = 0;
         }
         lastDropoutsValue = v.dropouts;
@@ -876,7 +964,10 @@
               dropoutHold = 4;
             }
           }
-      const rate = baseSpeed * Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;.PI * .35) * wowDepth;
+          dropoutHold--;
+        }
+
+        const wow = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
         const flutter = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
         const randomFlutter = (Math.random() - .5) * flutterDepth * .35;
         const rate = baseSpeed * Math.max(.25, 1 + wow + flutter + randomFlutter) * chewTarget;
@@ -1033,22 +1124,27 @@
         if (el) values[p.id] = Number(el.value);
       });
       return values;
-  const outLength = Math.max(1, Math.round(length / Math.max(0.05, (values.speed || 100) / 100)));
-        const out = new AudioBuffer({ numberOfChannels: channels, length: outLength, sampleRate });Promise(resolve => {
+    }
+
+    function processOffline(buffer, values, progressCb) {
+      return new Promise(resolve => {
         const channels = buffer.numberOfChannels;
         const length = buffer.length;
         const sampleRate = buffer.sampleRate;
         const duration = length / sampleRate;
-        const outconst baseSpeed = (values.speed || 100) / 100;
-        const wow = values.wow / 100;
-        const flutter = values.flutter / 100;
-        const chew = values.chew / 100;ioBuffer({ numberOfChannels: channels, length: outLength, sampleRate });
+        const outLength = Math.max(1, Math.round(length / Math.max(0.05, (values.speed || 100) / 100)));
+        const out = new AudioBuffer({ numberOfChannels: channels, length: outLength, sampleRate });
 
         const input = [];
         const output = [];
         for (let ch = 0; ch < channels; ch++) {
           input.push(buffer.getChannelData(ch));
-          output.push(out.getChannelData(chconst cleanPass = baseSpeed === 1 && wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;utter / 100;
+          output.push(out.getChannelData(ch));
+        }
+
+        const baseSpeed = (values.speed || 100) / 100;
+        const wow = values.wow / 100;
+        const flutter = values.flutter / 100;
         const chew = values.chew / 100;
         const dropouts = values.dropouts / 100;
         const saturation = values.saturation / 100;
@@ -1073,8 +1169,9 @@
           return hash01(n) * 2 - 1;
         }
 
-        function readInterpolated(ch, poconst outputDuration = outLength / sampleRate;
-        const tickCount = Math.max(1, Math.ceil(outputDuration * tickRate));   const idx = Math.floor(safe);
+        function readInterpolated(ch, pos) {
+          const safe = clamp(pos, 0, length - 2);
+          const idx = Math.floor(safe);
           const frac = safe - idx;
           return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
         }
@@ -1131,7 +1228,9 @@
           } else {
             dropoutTarget = 1;
             dropoutHold = 0;
- const rateScale = baseSpeed / avgRate;wRate = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
+          }
+
+          const wowRate = Math.sin(phase * 2 * Math.PI * .35) * wowDepth;
           const flutterRate = Math.sin(phase * 2 * Math.PI * 7.4 + Math.sin(phase * 5)) * flutterDepth;
           const randomFlutter = hashNoise(t * 19 + 4) * flutterDepth * .175;
           const rate = Math.max(.25, 1 + wowRate + flutterRate + randomFlutter) * chewTarget;
@@ -1144,7 +1243,8 @@
         const avgRate = rateSum / tickCount || 1;
         const rateScale = baseSpeed / avgRate;
         let readPos = 0;
-        let lp =const end = Math.min(outLength, i + chunk);t held = new Array(channels).fill(0);
+        let lp = new Array(channels).fill(0);
+        let held = new Array(channels).fill(0);
         let crushCounter = new Array(channels).fill(0);
         const crushStep = Math.max(1, Math.round(1 + crush * crush * 52));
 
@@ -1185,8 +1285,9 @@
               }
 
               if (crush > 0) {
-                if (crusprogressCb?.(i / outLength);
-          if (i < outLength) setTimeout(work, 0);rushCounter[ch] = crushStep;
+                if (crushCounter[ch] <= 0) {
+                  held[ch] = s;
+                  crushCounter[ch] = crushStep;
                 }
                 crushCounter[ch]--;
                 s = held[ch];
@@ -1203,7 +1304,7 @@
           }
 
           progressCb?.(i / outLength);
-          if (i < outLength) setTimeout(
+          if (i < outLength) setTimeout(work, 0);
           else resolve(out);
         }
 
