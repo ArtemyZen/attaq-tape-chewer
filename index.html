@@ -952,10 +952,11 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.18</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.19</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.19</strong> – Added smoothing to offline Render WAV for closer preview matching.</div>
         <div class="devlog-entry"><strong>v 0.1.18</strong> – Added experimental Live Record for realtime preview capture and WAV export.</div>
         <div class="devlog-entry"><strong>v 0.1.17</strong> – Updated preset Wow, Flutter and Chew values for the 300 range.</div>
         <div class="devlog-entry"><strong>v 0.1.16</strong> – Extended Wow, Flutter and Chew ranges to 300.</div>
@@ -1601,6 +1602,10 @@
         const avgRate = rateSum / tickCount || 1;
         const rateScale = baseSpeed / avgRate;
         let readPos = 0;
+        let smoothedRate = rates[0] * rateScale;
+        let smoothedGain = gains[0] || 1;
+        const rateSmoothing = 1 - Math.exp(-1 / (sampleRate * 0.035));
+        const gainSmoothing = 1 - Math.exp(-1 / (sampleRate * 0.018));
         let lp = new Array(channels).fill(0);
         let held = new Array(channels).fill(0);
         let crushCounter = new Array(channels).fill(0);
@@ -1620,8 +1625,12 @@
           for (; i < end; i++) {
             const sec = i / sampleRate;
             const tick = Math.min(tickCount - 1, Math.floor(sec * tickRate));
-            const rate = rates[tick] * rateScale;
-            const gain = gains[tick];
+            const targetRate = rates[tick] * rateScale;
+            const targetGain = gains[tick];
+            smoothedRate += (targetRate - smoothedRate) * rateSmoothing;
+            smoothedGain += (targetGain - smoothedGain) * gainSmoothing;
+            const rate = smoothedRate;
+            const gain = smoothedGain;
 
             for (let ch = 0; ch < channels; ch++) {
               let s = readInterpolated(ch, readPos);
