@@ -573,7 +573,7 @@
       { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 0, hint: 'Soft tape overload and compression.' },
       { id: 'noise', name: 'Noise', min: 0, max: 100, value: 6, hint: 'Tape hiss, dust and analog dirt.' },
       { id: 'lowpass', name: 'Muffle', min: 0, max: 100, value: 22, hint: 'Cuts highs for a dull cassette sound.' },
-      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Rough degradation for a nearly dead tape.' }
+      { id: 'crush', name: 'Crush', min: 0, max: 100, value: 0, hint: 'Digital bit and sample-rate damage.' }
     ];
 
     const state = {
@@ -712,6 +712,7 @@
       const shaper = ctx.createWaveShaper();
       const filter = ctx.createBiquadFilter();
       const dropoutGain = ctx.createGain();
+      const crusher = ctx.createScriptProcessor(1024, 2, 2);
       const noiseGain = ctx.createGain();
       const mix = ctx.createGain();
       const output = ctx.createGain();
@@ -736,8 +737,41 @@
       source.connect(input);
       input.connect(shaper);
       shaper.connect(filter);
-      filter.connect(dropoutGain);
+      filter.connect(crusher);
+      crusher.connect(dropoutGain);
       dropoutGain.connect(mix);
+
+      let crushHold = [0, 0];
+      let crushCounter = [0, 0];
+      crusher.onaudioprocess = (event) => {
+        const amount = state.values.crush / 100;
+        const inputBuffer = event.inputBuffer;
+        const outputBuffer = event.outputBuffer;
+        const channelCount = outputBuffer.numberOfChannels;
+
+        for (let ch = 0; ch < channelCount; ch++) {
+          const input = inputBuffer.getChannelData(Math.min(ch, inputBuffer.numberOfChannels - 1));
+          const output = outputBuffer.getChannelData(ch);
+
+          if (amount <= 0) {
+            output.set(input);
+            continue;
+          }
+
+          const holdSamples = 1 + Math.floor(amount * amount * 52);
+          const bits = Math.max(3, Math.round(16 - amount * 13));
+          const levels = Math.pow(2, bits - 1);
+
+          for (let i = 0; i < input.length; i++) {
+            if (crushCounter[ch] <= 0) {
+              crushHold[ch] = input[i];
+              crushCounter[ch] = holdSamples;
+            }
+            crushCounter[ch]--;
+            output[i] = Math.round(crushHold[ch] * levels) / levels;
+          }
+        }
+      };
 
       const noise = ctx.createBufferSource();
       const noiseBuffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * 2)), ctx.sampleRate);
@@ -753,7 +787,7 @@
       analyser.connect(output);
       output.connect(destination);
 
-      state.nodes = { input, shaper, filter, dropoutGain, noiseGain, mix, output, analyser, source, noise };
+      state.nodes = { input, shaper, filter, crusher, dropoutGain, noiseGain, mix, output, analyser, source, noise };
       updateLiveParams();
       startModulation(ctx);
       return state.nodes;
@@ -1004,6 +1038,7 @@
         const channels = buffer.numberOfChannels;
         const length = buffer.length;
         const sampleRate = buffer.sampleRate;
+        const duration = length / sampleRate;
         const out = new AudioBuffer({ numberOfChannels: channels, length, sampleRate });
 
         const input = [];
@@ -1018,7 +1053,7 @@
         const chew = values.chew / 100;
         const dropouts = values.dropouts / 100;
         const saturation = values.saturation / 100;
-        const noise = Math.pow(values.noise / 100, 1.7) * 0.14;
+        const noise = Math.pow(values.noise / 100, 1.45) * 0.18;
         const muffle = values.lowpass / 100;
         const crush = values.crush / 100;
 
@@ -1030,28 +1065,54 @@
           return;
         }
 
+        function readInterpolated(ch, pos) {
+          const safe = clamp(pos, 0, length - 2);
+          const idx = Math.floor(safe);
+          const frac = safe - idx;
+          return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
+        }
+
+        function smoothPulse(t, start, dur) {
+          if (t < start || t > start + dur) return 0;
+          const x = (t - start) / dur;
+          return Math.sin(Math.PI * x);
+        }
+
+        // Prebuild deterministic chew/dropout events so short files still render with audible damage.
+        const chewEvents = [];
+        if (chew > 0) {
+          const count = Math.max(1, Math.ceil(duration * (0.7 + chew * 3.2)));
+          for (let n = 0; n < count; n++) {
+            const pos = ((n + 0.35 + ((n * 37) % 17) / 31) / count) * Math.max(duration, 0.05);
+            const dur = 0.045 + chew * 0.24 + (((n * 11) % 9) / 9) * 0.08;
+            const depth = (0.08 + chew * 0.42) * (0.65 + (((n * 19) % 13) / 13) * 0.55);
+            chewEvents.push({ start: Math.min(pos, Math.max(0, duration - 0.02)), dur, depth });
+          }
+        }
+
+        const dropoutEvents = [];
+        if (dropouts > 0) {
+          const count = Math.max(1, Math.ceil(duration * (0.6 + dropouts * 4.0)));
+          for (let n = 0; n < count; n++) {
+            const pos = ((n + 0.5 + ((n * 23) % 19) / 37) / count) * Math.max(duration, 0.05);
+            const dur = 0.012 + dropouts * 0.13 + (((n * 7) % 8) / 8) * 0.035;
+            const depth = (0.25 + dropouts * 0.72) * (0.75 + (((n * 13) % 11) / 11) * 0.35);
+            dropoutEvents.push({ start: Math.min(pos, Math.max(0, duration - 0.01)), dur, depth: clamp(depth, 0, 0.96) });
+          }
+        }
+
         let readPos = 0;
-        let chewBend = 1;
-        let chewCounter = 0;
-        let dropoutGain = 1;
-        let dropoutCounter = 0;
         let lp = new Array(channels).fill(0);
         let held = new Array(channels).fill(0);
-        const crushStep = Math.max(1, Math.round(1 + crush * 56));
+        const crushStep = Math.max(1, Math.round(1 + crush * crush * 90));
 
-        const cutoff = 19000 - Math.pow(muffle, 1.45) * 17500;
-        const rc = 1 / (2 * Math.PI * Math.max(700, cutoff));
+        const cutoff = 19500 - Math.pow(muffle, 1.35) * 18000;
+        const rc = 1 / (2 * Math.PI * Math.max(600, cutoff));
         const dt = 1 / sampleRate;
         const alpha = muffle <= 0 ? 1 : dt / (rc + dt);
 
         const chunk = Math.max(4096, Math.floor(sampleRate / 4));
         let i = 0;
-
-        function readInterpolated(ch, pos) {
-          const idx = Math.floor(clamp(pos, 0, length - 2));
-          const frac = pos - idx;
-          return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
-        }
 
         function work() {
           const end = Math.min(length, i + chunk);
@@ -1059,55 +1120,36 @@
           for (; i < end; i++) {
             const sec = i / sampleRate;
 
-            if (chew > 0) {
-              if (chewCounter <= 0) {
-                if (Math.random() < 0.00012 + chew * 0.0012) {
-                  chewBend = 1 - Math.random() * chew * 0.45;
-                  chewCounter = Math.floor(sampleRate * (0.035 + Math.random() * 0.2));
-                } else {
-                  chewBend = 1;
-                  chewCounter = Math.floor(sampleRate * 0.035);
-                }
-              }
-              chewCounter--;
-            } else {
-              chewBend = 1;
-              chewCounter = 0;
-            }
+            let chewDip = 0;
+            for (const ev of chewEvents) chewDip = Math.max(chewDip, smoothPulse(sec, ev.start, ev.dur) * ev.depth);
 
-            if (dropouts > 0) {
-              if (dropoutCounter <= 0) {
-                if (Math.random() < 0.00008 + dropouts * 0.0011) {
-                  dropoutGain = Math.random() < 0.7
-                    ? 0.03 + Math.random() * 0.22
-                    : 0.3 + Math.random() * 0.4;
-                  dropoutCounter = Math.floor(sampleRate * (0.012 + Math.random() * (0.04 + dropouts * 0.16)));
-                } else {
-                  dropoutGain = 1;
-                  dropoutCounter = Math.floor(sampleRate * 0.035);
-                }
-              }
-              dropoutCounter--;
-            } else {
-              dropoutGain = 1;
-              dropoutCounter = 0;
-            }
+            let dropoutDip = 0;
+            for (const ev of dropoutEvents) dropoutDip = Math.max(dropoutDip, smoothPulse(sec, ev.start, ev.dur) * ev.depth);
+            const dropoutGain = dropouts > 0 ? clamp(1 - dropoutDip, 0.02, 1) : 1;
 
-            const wowRate = Math.sin(sec * Math.PI * 2 * 0.34) * wow * 0.085;
-            const flutterRate = Math.sin(sec * Math.PI * 2 * 7.3 + Math.sin(sec * 4.7)) * flutter * 0.028;
-            const randomFlutter = (Math.random() - 0.5) * flutter * 0.006;
-            const rate = Math.max(0.2, 1 + wowRate + flutterRate + randomFlutter) * chewBend;
+            const wowRate = Math.sin(sec * Math.PI * 2 * 0.34) * wow * 0.09;
+            const wowRate2 = Math.sin(sec * Math.PI * 2 * 0.11 + 1.7) * wow * 0.045;
+            const flutterRate = Math.sin(sec * Math.PI * 2 * 7.3 + Math.sin(sec * 4.7)) * flutter * 0.032;
+            const flutterRate2 = Math.sin(sec * Math.PI * 2 * 13.1 + 0.4) * flutter * 0.012;
+            const chewWobble = Math.sin(sec * Math.PI * 2 * (2.2 + chew * 3.2)) * chew * 0.02;
+            const chewRate = 1 - chewDip;
+            const rate = Math.max(0.16, 1 + wowRate + wowRate2 + flutterRate + flutterRate2 + chewWobble) * chewRate;
 
             for (let ch = 0; ch < channels; ch++) {
               let s = readInterpolated(ch, readPos);
 
               s *= dropoutGain;
 
-              if (noise > 0) s += (Math.random() * 2 - 1) * noise;
+              if (noise > 0) {
+                const hiss = (Math.random() * 2 - 1) * noise;
+                const slowDust = Math.sin(sec * Math.PI * 2 * (19 + ch * 3)) * noise * 0.12;
+                s += hiss + slowDust;
+              }
 
               if (saturation > 0) {
-                const drive = 1 + saturation * 8;
+                const drive = 1 + saturation * 10;
                 s = Math.tanh(s * drive) / Math.tanh(drive);
+                s *= 1 - saturation * 0.08;
               }
 
               if (muffle > 0) {
@@ -1118,7 +1160,8 @@
               if (crush > 0) {
                 if (i % crushStep === 0) held[ch] = s;
                 s = held[ch];
-                const quant = Math.max(8, Math.round(65536 / (1 + crush * 90)));
+                const bits = Math.max(3, Math.round(16 - crush * 13));
+                const quant = Math.pow(2, bits - 1);
                 s = Math.round(s * quant) / quant;
               }
 
