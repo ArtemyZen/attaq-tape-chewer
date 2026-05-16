@@ -1027,10 +1027,12 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.20</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.22</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.22</strong> – Added true dry bypass routing to prevent processing artifacts when color/damage controls are zero.</div>
+        <div class="devlog-entry"><strong>v 0.1.21</strong> – Fixed clean zero settings by hard-bypassing saturation, noise, filter coloration and crusher artifacts.</div>
         <div class="devlog-entry"><strong>v 0.1.20</strong> – Added header link to the full ATTAQ Audio Tools collection.</div>
         <div class="devlog-entry"><strong>v 0.1.19</strong> – Added smoothing to offline Render WAV for closer preview matching.</div>
         <div class="devlog-entry"><strong>v 0.1.18</strong> – Added experimental Live Record for realtime preview capture and WAV export.</div>
@@ -1211,10 +1213,14 @@
 
     function createChain(ctx, source, destination, startTime = ctx.currentTime + 0.03) {
       const input = ctx.createGain();
+      const dryGain = ctx.createGain();
+      const wetGain = ctx.createGain();
       const shaper = ctx.createWaveShaper();
       const filter = ctx.createBiquadFilter();
       const dropoutGain = ctx.createGain();
       const crusher = ctx.createScriptProcessor(1024, 2, 2);
+      const crushDryGain = ctx.createGain();
+      const crushWetGain = ctx.createGain();
       const noiseGain = ctx.createGain();
       const mix = ctx.createGain();
       const output = ctx.createGain();
@@ -1225,6 +1231,10 @@
       shaper.oversample = '4x';
       analyser.fftSize = 2048;
       dropoutGain.gain.value = 1;
+      dryGain.gain.value = 1;
+      wetGain.gain.value = 0;
+      crushDryGain.gain.value = 1;
+      crushWetGain.gain.value = 0;
       noiseGain.gain.value = 0;
       output.gain.value = 0;
 
@@ -1237,16 +1247,27 @@
       output.gain.linearRampToValueAtTime(1, startTime + 0.035);
 
       source.connect(input);
+
+      // True dry/wet routing. When color/damage controls are zero, audio avoids
+      // WaveShaper, Filter and ScriptProcessor completely, preventing browser
+      // processing artifacts and crackle.
+      input.connect(dryGain);
+      dryGain.connect(mix);
+
       input.connect(shaper);
       shaper.connect(filter);
+      filter.connect(crushDryGain);
+      crushDryGain.connect(dropoutGain);
       filter.connect(crusher);
-      crusher.connect(dropoutGain);
-      dropoutGain.connect(mix);
+      crusher.connect(crushWetGain);
+      crushWetGain.connect(dropoutGain);
+      dropoutGain.connect(wetGain);
+      wetGain.connect(mix);
 
       let crushHold = [0, 0];
       let crushCounter = [0, 0];
       crusher.onaudioprocess = (event) => {
-        const amount = state.values.crush / 100;
+        const amount = Math.max(0, Number(state.values.crush || 0)) / 100;
         const inputBuffer = event.inputBuffer;
         const outputBuffer = event.outputBuffer;
         const channelCount = outputBuffer.numberOfChannels;
@@ -1255,7 +1276,7 @@
           const input = inputBuffer.getChannelData(Math.min(ch, inputBuffer.numberOfChannels - 1));
           const output = outputBuffer.getChannelData(ch);
 
-          if (amount <= 0) {
+          if (amount <= 0.0001) {
             output.set(input);
             continue;
           }
@@ -1282,7 +1303,7 @@
       noise.buffer = noiseBuffer;
       noise.loop = true;
       noise.connect(noiseGain);
-      noiseGain.connect(mix);
+      noiseGain.connect(wetGain);
       noise.start(startTime);
 
       mix.connect(analyser);
@@ -1311,7 +1332,7 @@
         state.recordSilentGain.connect(destination);
       }
 
-      state.nodes = { input, shaper, filter, crusher, dropoutGain, noiseGain, mix, output, analyser, source, noise };
+      state.nodes = { input, dryGain, wetGain, shaper, filter, crusher, crushDryGain, crushWetGain, dropoutGain, noiseGain, mix, output, analyser, source, noise };
       updateLiveParams();
       startModulation(ctx);
       return state.nodes;
@@ -1324,19 +1345,57 @@
       const v = state.values;
       const now = ctx.currentTime;
 
-      const sat = v.saturation / 100;
-      n.shaper.curve = makeDistortionCurve(sat);
+      const sat = Math.max(0, Number(v.saturation || 0)) / 100;
+      if (sat <= 0.0001) {
+        // True hard bypass for saturation. A null curve is cleaner than an
+        // identity WaveShaper curve in some browsers.
+        n.shaper.curve = null;
+        n.shaper.oversample = 'none';
+      } else {
+        n.shaper.oversample = '4x';
+        n.shaper.curve = makeDistortionCurve(sat);
+      }
 
-      if (v.lowpass <= 0) {
-        n.filter.type = 'allpass';
-        n.filter.frequency.setTargetAtTime(Math.min(ctx.sampleRate * 0.45, 20000), now, .03);
+      const muffle = Math.max(0, Number(v.lowpass || 0));
+      if (muffle <= 0.0001) {
+        // Transparent filter state. Avoid allpass here because it can still
+        // create phase coloration even when the user expects full bypass.
+        n.filter.type = 'lowpass';
+        n.filter.Q.setValueAtTime(0.0001, now);
+        n.filter.frequency.cancelScheduledValues(now);
+        n.filter.frequency.setValueAtTime(Math.min(ctx.sampleRate * 0.49, 22000), now);
       } else {
         n.filter.type = 'lowpass';
-        const cutoff = 18000 - Math.pow(v.lowpass / 100, 1.5) * 16500;
+        n.filter.Q.setValueAtTime(.6, now);
+        const cutoff = 18000 - Math.pow(muffle / 100, 1.5) * 16500;
         n.filter.frequency.setTargetAtTime(Math.max(900, cutoff), now, .03);
       }
 
-      n.noiseGain.gain.setTargetAtTime(Math.pow(v.noise / 100, 1.7) * .14, now, .03);
+      const noiseValue = Math.max(0, Number(v.noise || 0));
+      if (noiseValue <= 0.0001) {
+        n.noiseGain.gain.cancelScheduledValues(now);
+        n.noiseGain.gain.setValueAtTime(0, now);
+      } else {
+        n.noiseGain.gain.setTargetAtTime(Math.pow(noiseValue / 100, 1.7) * .14, now, .03);
+      }
+
+      const dropouts = Math.max(0, Number(v.dropouts || 0));
+      const crushValue = Math.max(0, Number(v.crush || 0));
+      const needsWetChain = sat > 0.0001 || muffle > 0.0001 || noiseValue > 0.0001 || dropouts > 0.0001 || crushValue > 0.0001;
+
+      if (n.dryGain && n.wetGain) {
+        n.dryGain.gain.cancelScheduledValues(now);
+        n.wetGain.gain.cancelScheduledValues(now);
+        n.dryGain.gain.setTargetAtTime(needsWetChain ? 0 : 1, now, .01);
+        n.wetGain.gain.setTargetAtTime(needsWetChain ? 1 : 0, now, .01);
+      }
+
+      if (n.crushDryGain && n.crushWetGain) {
+        n.crushDryGain.gain.cancelScheduledValues(now);
+        n.crushWetGain.gain.cancelScheduledValues(now);
+        n.crushDryGain.gain.setValueAtTime(crushValue > 0.0001 ? 0 : 1, now);
+        n.crushWetGain.gain.setValueAtTime(crushValue > 0.0001 ? 1 : 0, now);
+      }
     }
 
     function startModulation(ctx) {
@@ -1587,7 +1646,7 @@
         const muffle = values.lowpass / 100;
         const crush = values.crush / 100;
 
-        const cleanPass = baseSpeed === 1 && wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noiseAmount <= 0 && muffle <= 0 && crush <= 0;
+        const cleanPass = Math.abs(baseSpeed - 1) < 0.000001 && wow <= 0.000001 && flutter <= 0.000001 && chew <= 0.000001 && dropouts <= 0.000001 && saturation <= 0.000001 && noiseAmount <= 0.000001 && muffle <= 0.000001 && crush <= 0.000001;
         if (cleanPass) {
           for (let ch = 0; ch < channels; ch++) output[ch].set(input[ch]);
           progressCb?.(1);
@@ -1713,21 +1772,21 @@
 
               s *= gain;
 
-              if (noiseAmount > 0) {
+              if (noiseAmount > 0.000001) {
                 s += hashNoise(i * (ch + 1) + ch * 999) * noiseAmount;
               }
 
-              if (saturation > 0) {
+              if (saturation > 0.000001) {
                 // Match the realtime WaveShaper curve: no output normalization.
                 s = Math.tanh(s * (1 + saturation * 7));
               }
 
-              if (muffle > 0) {
+              if (muffle > 0.000001) {
                 lp[ch] = lp[ch] + alpha * (s - lp[ch]);
                 s = lp[ch];
               }
 
-              if (crush > 0) {
+              if (crush > 0.000001) {
                 if (crushCounter[ch] <= 0) {
                   held[ch] = s;
                   crushCounter[ch] = crushStep;
