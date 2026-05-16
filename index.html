@@ -846,6 +846,77 @@
     input[type="range"] {
       border-radius: 0 !important;
     }
+
+    .tools-link {
+      display: block;
+      min-width: 265px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.065) 0%, rgba(255,255,255,.018) 10%, rgba(0,0,0,.22) 100%),
+        linear-gradient(135deg, #080808 0%, #171717 32%, #090909 66%, #151515 100%);
+      color: var(--text);
+      text-decoration: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.7),
+        0 10px 26px rgba(0,0,0,.28);
+      transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+      position: relative;
+      overflow: hidden;
+      border-radius: 0;
+    }
+
+    .tools-link::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .34;
+      background:
+        linear-gradient(103deg, transparent 0%, rgba(255,255,255,.07) 1%, transparent 2%),
+        linear-gradient(142deg, transparent 16%, rgba(255,255,255,.055) 16.5%, transparent 17%),
+        repeating-linear-gradient(90deg, transparent 0 12px, rgba(255,255,255,.015) 13px, transparent 14px, transparent 28px);
+      mix-blend-mode: screen;
+    }
+
+    .tools-link:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+      border-color: rgba(255,255,255,.28);
+    }
+
+    .tools-link span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .tools-link-kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .tools-link-title {
+      display: block;
+      color: #d7ad45;
+      font-size: 17px;
+      line-height: 1.1;
+      font-weight: 950;
+      letter-spacing: .02em;
+      margin-bottom: 4px;
+    }
+
+    .tools-link-subtitle {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
   </style>
 </head>
 <body>
@@ -855,7 +926,11 @@
         <h1>ATTAQ TAPE CHEWER</h1>
         <div class="subtitle">A dirty cassette damage emulator for warped pitch, tape chew, dropouts, saturation, hiss and muffled magnetic sadness.</div>
       </div>
-      <div class="badge">Web Audio API · Offline WAV Render</div>
+      <a class="tools-link" href="https://artemyzen.github.io/attaq-audio-tools/" target="_blank" rel="noopener">
+        <span class="tools-link-kicker">More Tools</span>
+        <span class="tools-link-title">Other ATTAQ Audio Tools</span>
+        <span class="tools-link-subtitle">Open the full collection</span>
+      </a>
     </header>
 
     <main class="main">
@@ -897,7 +972,7 @@
               </div>
 
               <div class="mini-widget vu-widget">
-                <div class="mini-widget-title">Input Level</div>
+                <div class="mini-widget-title">Output Level</div>
                 <div class="mini-vu-wrap">
                   <div class="mini-vu">
                     <div class="mini-vu-label">L</div>
@@ -952,10 +1027,11 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.19</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.20</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.20</strong> – Added header link to the full ATTAQ Audio Tools collection.</div>
         <div class="devlog-entry"><strong>v 0.1.19</strong> – Added smoothing to offline Render WAV for closer preview matching.</div>
         <div class="devlog-entry"><strong>v 0.1.18</strong> – Added experimental Live Record for realtime preview capture and WAV export.</div>
         <div class="devlog-entry"><strong>v 0.1.17</strong> – Updated preset Wow, Flutter and Chew values for the 300 range.</div>
