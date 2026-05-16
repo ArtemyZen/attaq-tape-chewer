@@ -416,6 +416,14 @@
       text-align: center;
       font-size: 12px;
       padding: 2px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .beta-note {
+      color: #777;
+      font-size: 11px;
+      line-height: 1.35;
     }
 
     .footer a {
@@ -561,11 +569,17 @@
       </section>
     </main>
 
-    <div class="footer">By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.10ript>
+    <div class="footer">
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.11</div>
+      <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
+    </div>
+  </div>
+
+  <script>
     const PARAMS = [
-      { id: 'wow', name: 'Wo{ id: 'wow', name: 'Wow', min: 0, max: 150, value: 10, hint: 'Slow speed and pitch drift. Extra range above 100.' },
+      { id: 'wow', name: 'Wow', min: 0, max: 150, value: 10, hint: 'Slow speed and pitch drift. Extra range above 100.' },
       { id: 'flutter', name: 'Flutter', min: 0, max: 150, value: 6, hint: 'Fast nervous cassette motor jitter. Extra range above 100.' },
-      { id: 'chew', name: 'Chew', min: 0, max: 150, value: 6, hint: 'Random pitch dives, tape bends and warps. Extra range above 100.' },ape bends and warps. Extra range above 100.' },
+      { id: 'chew', name: 'Chew', min: 0, max: 150, value: 6, hint: 'Random pitch dives, tape bends and warps. Extra range above 100.' },
       { id: 'dropouts', name: 'Dropouts', min: 0, max: 100, value: 0, hint: 'Short signal losses from damaged tape.' },
       { id: 'saturation', name: 'Saturation', min: 0, max: 100, value: 0, hint: 'Soft tape overload and compression.' },
       { id: 'noise', name: 'Noise', min: 0, max: 100, value: 6, hint: 'Tape hiss, dust and analog dirt.' },
@@ -607,7 +621,9 @@
     };
 
     function buildControls() {
-      els.controls.innerHTML = PARAMS.m<div class="knob-face" id="${p.id}Knob" style="--rot: ${valueToDeg(p.value, p.max)}deg"></div>style="--rot: ${valueToDeg(p.value, p.max)}deg"></div>
+      els.controls.innerHTML = PARAMS.map(p => `
+        <div class="knob">
+          <div class="knob-face" id="${p.id}Knob" style="--rot: ${valueToDeg(p.value, p.max)}deg"></div>
           <div class="knob-info">
             <label for="${p.id}"><span>${p.name}</span><span id="${p.id}Value">${p.value}</span></label>
             <input id="${p.id}" type="range" min="${p.min}" max="${p.max}" value="${p.value}" />
@@ -621,10 +637,14 @@
         slider.addEventListener('input', () => {
           state.values[p.id] = Number(slider.value);
           document.getElementById(`${p.id}Value`).textContent = slider.value;
-          const knoif (knob) knob.style.setProperty('--rot', `${valueToDeg(Number(slider.value), p.max)}deg`);ty('--rot', `${valueToDeg(Number(slider.value), p.max)}deg`);
-  function valueToDeg(value, max = 100) {
-      return -135 + (value / max) * 270;
-    }ToDeg(value, max = 100) {
+          const knob = document.getElementById(`${p.id}Knob`);
+          if (knob) knob.style.setProperty('--rot', `${valueToDeg(Number(slider.value), p.max)}deg`);
+          updateLiveParams();
+        });
+      });
+    }
+
+    function valueToDeg(value, max = 100) {
       return -135 + (value / max) * 270;
     }
 
@@ -643,10 +663,9 @@
         state.values[id] = val;
         const slider = document.getElementById(id);
         slider.value = val;
-        document.getElementById(`${id}Value`).textContent = if (knob) {
-          const param = PARAMS.find(p => p.id === id);
-          knob.style.setProperty('--rot', `${valueToDeg(val, param?.max || 100)}deg`);
-        }     if (knob) {
+        document.getElementById(`${id}Value`).textContent = val;
+        const knob = document.getElementById(`${id}Knob`);
+        if (knob) {
           const param = PARAMS.find(p => p.id === id);
           knob.style.setProperty('--rot', `${valueToDeg(val, param?.max || 100)}deg`);
         }
@@ -840,7 +859,8 @@
         lastDropoutsValue = v.dropouts;
 
         const wowDepth = v.wow / 100 * .085;
-        const flutterDepth = v.flutter /
+        const flutterDepth = v.flutter / 100 * .026;
+        const chewDepth = v.chew / 100 * .38;
 
         if (chewHold <= 0) {
           const chance = v.chew <= 0 ? 0 : .015 + v.chew / 100 * .09;
