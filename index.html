@@ -990,6 +990,15 @@
 
     function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
 
+    function getCurrentValues() {
+      const values = { ...state.values };
+      PARAMS.forEach(p => {
+        const el = document.getElementById(p.id);
+        if (el) values[p.id] = Number(el.value);
+      });
+      return values;
+    }
+
     function processOffline(buffer, values, progressCb) {
       return new Promise(resolve => {
         const channels = buffer.numberOfChannels;
@@ -1004,91 +1013,127 @@
           output.push(out.getChannelData(ch));
         }
 
-        const wowDepth = values.wow / 100 * .085;
-        const flutterDepth = values.flutter / 100 * .026;
-        const chewDepth = values.chew / 100 * .38;
-        const dropoutAmount = values.dropouts / 100;
-        const sat = values.saturation / 100;
-        const noise = Math.pow(values.noise / 100, 1.7) * .14;
+        const wow = values.wow / 100;
+        const flutter = values.flutter / 100;
+        const chew = values.chew / 100;
+        const dropouts = values.dropouts / 100;
+        const saturation = values.saturation / 100;
+        const noise = Math.pow(values.noise / 100, 1.7) * 0.14;
         const muffle = values.lowpass / 100;
         const crush = values.crush / 100;
 
+        const cleanPass = wow <= 0 && flutter <= 0 && chew <= 0 && dropouts <= 0 && saturation <= 0 && noise <= 0 && muffle <= 0 && crush <= 0;
+        if (cleanPass) {
+          for (let ch = 0; ch < channels; ch++) output[ch].set(input[ch]);
+          progressCb?.(1);
+          resolve(out);
+          return;
+        }
+
         let readPos = 0;
-        let chewTarget = 1;
+        let chewBend = 1;
         let chewCounter = 0;
-        let dropoutTarget = 1;
+        let dropoutGain = 1;
         let dropoutCounter = 0;
         let lp = new Array(channels).fill(0);
-        const cutoff = 18000 - Math.pow(muffle, 1.5) * 16500;
-        const rc = 1 / (2 * Math.PI * Math.max(900, cutoff));
+        let held = new Array(channels).fill(0);
+        const crushStep = Math.max(1, Math.round(1 + crush * 56));
+
+        const cutoff = 19000 - Math.pow(muffle, 1.45) * 17500;
+        const rc = 1 / (2 * Math.PI * Math.max(700, cutoff));
         const dt = 1 / sampleRate;
         const alpha = muffle <= 0 ? 1 : dt / (rc + dt);
-        const stepSize = Math.max(1, Math.round(1 + crush * 48));
-        let held = new Array(channels).fill(0);
 
-        const chunk = 44100;
+        const chunk = Math.max(4096, Math.floor(sampleRate / 4));
         let i = 0;
+
+        function readInterpolated(ch, pos) {
+          const idx = Math.floor(clamp(pos, 0, length - 2));
+          const frac = pos - idx;
+          return input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
+        }
 
         function work() {
           const end = Math.min(length, i + chunk);
-          for (; i < end; i++) {
-            if (chewCounter <= 0) {
-              const chance = values.chew <= 0 ? 0 : .00018 + values.chew / 100 * .0011;
-              if (Math.random() < chance) {
-                chewTarget = 1 - Math.random() * chewDepth;
-                chewCounter = Math.floor(sampleRate * (.04 + Math.random() * .22));
-              } else {
-                chewTarget = 1;
-                chewCounter = Math.floor(sampleRate * .04);
-              }
-            }
-            chewCounter--;
 
-            if (dropoutAmount > 0) {
-              if (dropoutCounter <= 0) {
-                const chance = .00012 + dropoutAmount * .0012;
-                if (Math.random() < chance) {
-                  dropoutTarget = Math.random() < .65 ? .04 + Math.random() * .25 : .35 + Math.random() * .35;
-                  dropoutCounter = Math.floor(sampleRate * (.015 + Math.random() * (.04 + dropoutAmount * .18)));
+          for (; i < end; i++) {
+            const sec = i / sampleRate;
+
+            if (chew > 0) {
+              if (chewCounter <= 0) {
+                if (Math.random() < 0.00012 + chew * 0.0012) {
+                  chewBend = 1 - Math.random() * chew * 0.45;
+                  chewCounter = Math.floor(sampleRate * (0.035 + Math.random() * 0.2));
                 } else {
-                  dropoutTarget = 1;
-                  dropoutCounter = Math.floor(sampleRate * .035);
+                  chewBend = 1;
+                  chewCounter = Math.floor(sampleRate * 0.035);
+                }
+              }
+              chewCounter--;
+            } else {
+              chewBend = 1;
+              chewCounter = 0;
+            }
+
+            if (dropouts > 0) {
+              if (dropoutCounter <= 0) {
+                if (Math.random() < 0.00008 + dropouts * 0.0011) {
+                  dropoutGain = Math.random() < 0.7
+                    ? 0.03 + Math.random() * 0.22
+                    : 0.3 + Math.random() * 0.4;
+                  dropoutCounter = Math.floor(sampleRate * (0.012 + Math.random() * (0.04 + dropouts * 0.16)));
+                } else {
+                  dropoutGain = 1;
+                  dropoutCounter = Math.floor(sampleRate * 0.035);
                 }
               }
               dropoutCounter--;
             } else {
-              dropoutTarget = 1;
+              dropoutGain = 1;
               dropoutCounter = 0;
             }
 
-            const sec = i / sampleRate;
-            const wow = Math.sin(sec * 2 * Math.PI * .35) * wowDepth;
-            const flutter = Math.sin(sec * 2 * Math.PI * 7.4 + Math.sin(sec * 5)) * flutterDepth;
-            const rate = Math.max(.25, 1 + wow + flutter + (Math.random() - .5) * flutterDepth * .35) * chewTarget;
-            readPos = clamp(readPos + rate, 0, length - 2);
-
-            const idx = Math.floor(readPos);
-            const frac = readPos - idx;
+            const wowRate = Math.sin(sec * Math.PI * 2 * 0.34) * wow * 0.085;
+            const flutterRate = Math.sin(sec * Math.PI * 2 * 7.3 + Math.sin(sec * 4.7)) * flutter * 0.028;
+            const randomFlutter = (Math.random() - 0.5) * flutter * 0.006;
+            const rate = Math.max(0.2, 1 + wowRate + flutterRate + randomFlutter) * chewBend;
 
             for (let ch = 0; ch < channels; ch++) {
-              let s = input[ch][idx] * (1 - frac) + input[ch][idx + 1] * frac;
-              s *= dropoutTarget;
-              s += (Math.random() * 2 - 1) * noise;
-              if (sat > 0) s = Math.tanh(s * (1 + sat * 7));
+              let s = readInterpolated(ch, readPos);
+
+              s *= dropoutGain;
+
+              if (noise > 0) s += (Math.random() * 2 - 1) * noise;
+
+              if (saturation > 0) {
+                const drive = 1 + saturation * 8;
+                s = Math.tanh(s * drive) / Math.tanh(drive);
+              }
+
               if (muffle > 0) {
                 lp[ch] = lp[ch] + alpha * (s - lp[ch]);
                 s = lp[ch];
               }
-              if (crush > 0 && i % stepSize === 0) held[ch] = s;
-              if (crush > 0) s = held[ch];
-              output[ch][i] = s;
+
+              if (crush > 0) {
+                if (i % crushStep === 0) held[ch] = s;
+                s = held[ch];
+                const quant = Math.max(8, Math.round(65536 / (1 + crush * 90)));
+                s = Math.round(s * quant) / quant;
+              }
+
+              output[ch][i] = clamp(s, -1, 1);
             }
+
+            readPos += rate;
+            if (readPos >= length - 2) readPos = length - 2;
           }
 
           progressCb?.(i / length);
           if (i < length) setTimeout(work, 0);
           else resolve(out);
         }
+
         work();
       });
     }
@@ -1143,7 +1188,8 @@
       els.modeText.textContent = 'RENDERING';
 
       try {
-        const rendered = await processOffline(state.buffer, { ...state.values }, p => {
+        const renderValues = getCurrentValues();
+        const rendered = await processOffline(state.buffer, renderValues, p => {
           els.status.textContent = `Rendering WAV... ${Math.round(p * 100)}%`; 
           els.modeText.textContent = `${Math.round(p * 100)}%`; 
         });
