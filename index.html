@@ -1091,10 +1091,11 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.23</div>
+      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.24</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
+        <div class="devlog-entry"><strong>v 0.1.24</strong> – Connected Created Track playback to oscilloscope and Output Level meters.</div>
         <div class="devlog-entry"><strong>v 0.1.23</strong> – Made Clean Old Tape the default preset, reduced preset list and removed saturation from Almost Dead.</div>
         <div class="devlog-entry"><strong>v 0.1.22</strong> – Added true dry bypass routing to prevent processing artifacts when color/damage controls are zero.</div>
         <div class="devlog-entry"><strong>v 0.1.21</strong> – Fixed clean zero settings by hard-bypassing saturation, noise, filter coloration and crusher artifacts.</div>
@@ -1136,6 +1137,9 @@
       playing: false,
       loop: false,
       raf: null,
+      createdScopeRaf: null,
+      createdAudioSource: null,
+      createdAnalyser: null,
       recording: false,
       mediaDest: null,
       mediaRecorder: null,
@@ -1645,6 +1649,11 @@
     function drawScope() {
       const analyser = state.nodes.analyser;
       if (!analyser) return;
+      drawAnalyserScope(analyser);
+    }
+
+    function drawAnalyserScope(analyser) {
+      if (!analyser) return;
       const canvas = els.scope;
       const c = canvas.getContext('2d');
       const w = canvas.width, h = canvas.height;
@@ -1672,6 +1681,45 @@
       if (els.needleL) els.needleL.style.transform = `rotate(${angle + (Math.random() - .5) * 4}deg)`;
       if (els.needleR) els.needleR.style.transform = `rotate(${angle + (Math.random() - .5) * 5}deg)`;
       if (els.recorder) els.recorder.classList.toggle('chewy', state.values.chew > 35 && Math.random() > .22);
+    }
+
+    function stopCreatedScope() {
+      if (state.createdScopeRaf) cancelAnimationFrame(state.createdScopeRaf);
+      state.createdScopeRaf = null;
+      if (!state.playing) {
+        els.recorder.classList.remove('playing', 'chewy');
+        if (els.needleL) els.needleL.style.transform = 'rotate(-38deg)';
+        if (els.needleR) els.needleR.style.transform = 'rotate(-38deg)';
+      }
+    }
+
+    async function startCreatedScope() {
+      if (!els.createdAudio?.src) return;
+      const ctx = ensureContext();
+      await ctx.resume();
+
+      if (state.playing) stop(false);
+
+      if (!state.createdAudioSource) {
+        state.createdAudioSource = ctx.createMediaElementSource(els.createdAudio);
+        state.createdAnalyser = ctx.createAnalyser();
+        state.createdAnalyser.fftSize = 2048;
+        state.createdAudioSource.connect(state.createdAnalyser);
+        state.createdAnalyser.connect(ctx.destination);
+      }
+
+      els.recorder.classList.add('playing');
+      els.recorder.classList.remove('chewy');
+
+      const tick = () => {
+        if (els.createdAudio.paused || els.createdAudio.ended) {
+          stopCreatedScope();
+          return;
+        }
+        drawAnalyserScope(state.createdAnalyser);
+        state.createdScopeRaf = requestAnimationFrame(tick);
+      };
+      tick();
     }
 
     function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
@@ -1969,6 +2017,7 @@
     }
 
     function hideCreatedTrack(message = '') {
+      stopCreatedScope();
       if (!els.createdTrack) return;
       if (els.createdAudio?.src) URL.revokeObjectURL(els.createdAudio.src);
       els.createdTrack.hidden = true;
@@ -2096,6 +2145,9 @@
     els.recordLive.addEventListener('click', startLiveRecording);
     els.stopRecord.addEventListener('click', () => stopLiveRecording(false));
     els.deleteCreated.addEventListener('click', () => hideCreatedTrack('Deleted.'));
+    els.createdAudio.addEventListener('play', startCreatedScope);
+    els.createdAudio.addEventListener('pause', stopCreatedScope);
+    els.createdAudio.addEventListener('ended', stopCreatedScope);
 
     document.querySelectorAll('.preset').forEach(btn => {
       btn.addEventListener('click', () => setPreset(btn.dataset.preset));
