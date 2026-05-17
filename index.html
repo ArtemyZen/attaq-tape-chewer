@@ -670,6 +670,60 @@
       line-height: 1.35;
     }
 
+    .support-block {
+      margin: 8px auto 4px;
+      max-width: 760px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.018);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .support-title {
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 10px;
+    }
+
+    .support-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .support-button {
+      display: inline-block;
+      min-width: 190px;
+      padding: 11px 16px;
+      border: 1px solid rgba(255,255,255,.15);
+      color: #f0f0f0 !important;
+      text-decoration: none;
+      font-weight: 900 !important;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.018) 35%, rgba(0,0,0,.3)),
+        linear-gradient(135deg, #111 0%, #1b1b1b 45%, #090909 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.75),
+        0 6px 14px rgba(0,0,0,.32);
+    }
+
+    .support-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .support-button.itch {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.014) 35%, rgba(0,0,0,.32)),
+        linear-gradient(135deg, #3b1111 0%, #742020 45%, #250909 100%);
+    }
+
     .devlog {
       margin: 4px auto 0;
       max-width: 760px;
@@ -769,9 +823,9 @@
 
     body {
       background:
-        radial-gradient(circle at 18% 8%, rgba(255,255,255,.055), transparent 28%),
-        radial-gradient(circle at 78% 0%, rgba(255,255,255,.025), transparent 30%),
-        linear-gradient(135deg, #000 0%, #040404 38%, #080808 100%) !important;
+        radial-gradient(circle at center, rgba(120,150,120,.16) 1px, transparent 1.4px),
+        linear-gradient(135deg, #020403 0%, #050807 42%, #030303 100%) !important;
+      background-size: 6px 6px, auto;
       position: relative;
       overflow-x: hidden;
     }
@@ -781,14 +835,11 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      opacity: .38;
+      opacity: .22;
       background:
-        repeating-linear-gradient(115deg, transparent 0 18px, rgba(255,255,255,.03) 19px, transparent 20px, transparent 46px),
-        repeating-linear-gradient(92deg, transparent 0 46px, rgba(255,255,255,.016) 47px, transparent 48px, transparent 96px),
-        linear-gradient(12deg, transparent 0%, rgba(255,255,255,.055) 1%, transparent 2%),
-        linear-gradient(168deg, transparent 10%, rgba(255,255,255,.045) 10.6%, transparent 11.2%),
-        linear-gradient(83deg, transparent 40%, rgba(255,255,255,.038) 40.4%, transparent 40.8%),
-        linear-gradient(132deg, transparent 70%, rgba(255,255,255,.03) 70.5%, transparent 71%);
+        radial-gradient(circle at center, rgba(160,190,150,.12) 1px, transparent 1.3px);
+      background-size: 12px 12px;
+      background-position: 3px 3px;
       mix-blend-mode: screen;
     }
 
@@ -799,11 +850,9 @@
       pointer-events: none;
       opacity: .18;
       background:
-        radial-gradient(circle at 12% 18%, rgba(255,255,255,.03), transparent 18%),
-        radial-gradient(circle at 78% 22%, rgba(255,255,255,.025), transparent 20%),
-        radial-gradient(circle at 34% 74%, rgba(255,255,255,.02), transparent 18%),
-        radial-gradient(circle at 88% 82%, rgba(255,255,255,.02), transparent 16%),
-        repeating-linear-gradient(140deg, transparent 0 24px, rgba(255,255,255,.012) 25px, transparent 26px, transparent 58px);
+        linear-gradient(135deg, rgba(255,255,255,.025), transparent 28%, rgba(0,0,0,.18) 72%, transparent),
+        radial-gradient(circle at 20% 12%, rgba(255,255,255,.03), transparent 24%),
+        radial-gradient(circle at 80% 0%, rgba(255,255,255,.018), transparent 24%);
       mix-blend-mode: screen;
     }
 
@@ -818,6 +867,7 @@
     .live-record-panel,
     .created-track,
     .user-presets,
+    .support-block,
     .devlog {
       position: relative;
       overflow: hidden;
@@ -844,6 +894,7 @@
     .live-record-panel::before,
     .created-track::before,
     .user-presets::before,
+    .support-block::before,
     .devlog::before {
       content: "";
       position: absolute;
@@ -872,6 +923,7 @@
     .live-record-panel::after,
     .created-track::after,
     .user-presets::after,
+    .support-block::after,
     .devlog::after {
       content: "";
       position: absolute;
@@ -895,6 +947,7 @@
     .live-record-panel > *,
     .created-track > *,
     .user-presets > *,
+    .support-block > *,
     .devlog > * {
       position: relative;
       z-index: 1;
@@ -1023,6 +1076,8 @@
     .display,
     .user-presets,
     .user-preset-input,
+    .support-block,
+    .support-button,
     .devlog,
     input[type="range"] {
       border-radius: 0 !important;
@@ -1226,8 +1281,15 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · <a href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a> · v 0.1.26</div>
+      <div>By Artemy Zen · v 0.1.26</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
+      <div class="support-block">
+        <div class="support-title">Support / Follow</div>
+        <div class="support-buttons">
+          <a class="support-button" href="https://t.me/archichtotodelajet" target="_blank" rel="noopener">Telegram</a>
+          <a class="support-button itch" href="https://artemyzen.itch.io/attaq-tape-chewer" target="_blank" rel="noopener">Support on Itch Io</a>
+        </div>
+      </div>
       <div class="devlog">
         <div class="devlog-title">Devlog</div>
         <div class="devlog-entry"><strong>v 0.1.26</strong> – Added local user presets with save, load and delete actions.</div>
