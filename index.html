@@ -670,6 +670,58 @@
       line-height: 1.35;
     }
 
+    .footer-credit {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-credit a {
+      color: var(--accent);
+      font-weight: 900;
+      text-decoration: none;
+      transition: filter .12s ease, text-shadow .12s ease;
+    }
+
+    .footer-credit a:hover {
+      filter: brightness(1.12);
+      text-shadow: 0 0 10px rgba(255,255,255,.12);
+    }
+
+    .footer-links {
+      margin: 6px auto 4px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .footer-link {
+      display: inline-block;
+      min-width: 112px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      color: #f0f0f0 !important;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 900 !important;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.018) 35%, rgba(0,0,0,.3)),
+        linear-gradient(135deg, #111 0%, #1b1b1b 45%, #090909 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.75),
+        0 6px 14px rgba(0,0,0,.25);
+      transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+    }
+
+    .footer-link:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+      border-color: rgba(255,255,255,.28);
+    }
+
     .support-block {
       margin: 8px auto 4px;
       max-width: 760px;
@@ -1228,6 +1280,7 @@
     .user-preset-input,
     .support-block,
     .support-button,
+    .footer-link,
     .devlog,
     input[type="range"] {
       border-radius: 0 !important;
@@ -1430,8 +1483,13 @@
     </main>
 
     <div class="footer">
-      <div>By Artemy Zen · v 0.1.26</div>
+      <div class="footer-credit">By <a href="https://artemyzen.github.io/artemyzen/" target="_blank" rel="noopener">Artemy Zen</a> · v 0.1.26</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
+      <div class="footer-links">
+        <a class="footer-link" href="https://discord.gg/W7pUZDcqs7" target="_blank" rel="noopener">Discord</a>
+        <a class="footer-link" href="https://www.linkedin.com/company/attaq-lab" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="footer-link" href="https://artemyzen.github.io/attaq-lab/" target="_blank" rel="noopener">ATTAQ Lab</a>
+      </div>
       <div class="support-block">
         <div class="support-title">Support / Follow</div>
         <div class="support-buttons">
