@@ -696,16 +696,13 @@
     }
 
     .footer-link {
-      display: inline-block;
-      min-width: 112px;
-      padding: 9px 12px;
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
       border: 1px solid rgba(255,255,255,.15);
       color: #f0f0f0 !important;
       text-decoration: none;
-      font-size: 11px;
-      font-weight: 900 !important;
-      letter-spacing: .08em;
-      text-transform: uppercase;
       background:
         linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.018) 35%, rgba(0,0,0,.3)),
         linear-gradient(135deg, #111 0%, #1b1b1b 45%, #090909 100%);
@@ -720,6 +717,18 @@
       transform: translateY(-1px);
       filter: brightness(1.08);
       border-color: rgba(255,255,255,.28);
+    }
+
+    .footer-link svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .footer-link.discord svg {
+      width: 24px;
+      height: 24px;
     }
 
     .support-block {
@@ -824,7 +833,7 @@
 
     .hub-name::before,
     .hub-name::after {
-      content: "ARTEMY ZEN";
+      content: "ATTAQ LAB";
       position: absolute;
       inset: 0;
       pointer-events: none;
@@ -1486,14 +1495,19 @@
       <div class="footer-credit">By <a href="https://artemyzen.github.io/artemyzen/" target="_blank" rel="noopener">Artemy Zen</a> · v 0.1.26</div>
       <div class="beta-note">Beta version. Render may not perfectly match preview yet. Development is in progress.</div>
       <div class="footer-links">
-        <a class="footer-link" href="https://discord.gg/W7pUZDcqs7" target="_blank" rel="noopener">Discord</a>
-        <a class="footer-link" href="https://www.linkedin.com/company/attaq-lab" target="_blank" rel="noopener">LinkedIn</a>
-        <a class="footer-link" href="https://artemyzen.github.io/attaq-lab/" target="_blank" rel="noopener">ATTAQ Lab</a>
+        <a class="footer-link discord" href="https://discord.gg/W7pUZDcqs7" target="_blank" rel="noopener" aria-label="Discord">
+          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <path d="M20.32 4.37A19.8 19.8 0 0 0 15.36 2.8l-.24.48c1.74.42 2.55 1.04 2.55 1.04a15.9 15.9 0 0 0-10.68 0s.82-.62 2.56-1.04l-.25-.48a19.8 19.8 0 0 0-4.95 1.57C1.2 9.1.53 13.7.9 18.23a20 20 0 0 0 6.08 3.05l.75-1.22a12.3 12.3 0 0 1-1.94-.93l.47-.36a14.2 14.2 0 0 0 11.48 0l.48.36c-.61.36-1.26.67-1.95.93l.75 1.22a20 20 0 0 0 6.08-3.05c.45-5.25-.76-9.8-3.78-13.86ZM8.45 15.42c-1.18 0-2.15-1.08-2.15-2.4s.95-2.4 2.15-2.4c1.2 0 2.17 1.08 2.15 2.4 0 1.32-.95 2.4-2.15 2.4Zm7.1 0c-1.18 0-2.15-1.08-2.15-2.4s.95-2.4 2.15-2.4c1.2 0 2.16 1.08 2.15 2.4 0 1.32-.95 2.4-2.15 2.4Z" />
+          </svg>
+        </a>
+        <a class="footer-link linkedin" href="https://www.linkedin.com/company/attaq-lab" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.32 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12Zm1.78 13.02H3.53V9H7.1v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0Z" />
+          </svg>
+        </a>
       </div>
-      <div class="support-block">
-        <div class="support-title">Support / Follow</div>
-        <div class="support-buttons">
-          <a class="support-button hub" href="https://artemyzen.github.io/artemyzen/" target="_blank" rel="noopener"><span class="hub-name">ARTEMY ZEN</span></a>
+      <div class="support-block">        <div class="support-buttons">
+          <a class="support-button hub" href="https://artemyzen.github.io/attaq-lab/" target="_blank" rel="noopener"><span class="hub-name">ATTAQ LAB</span></a>
           <a class="support-button itch" href="https://artemyzen.itch.io/attaq-tape-chewer" target="_blank" rel="noopener">
             <span class="itch-logo" aria-hidden="true">
               <svg viewBox="0 0 24 24" role="img">
@@ -1502,7 +1516,7 @@
             </span>
             <span class="support-button-copy">
               <span class="support-button-main">SUPPORT ME ON ITCH IO</span>
-              <span class="support-button-text">This tool is free online. If it helped your project, you can support me on itch.io. The paid version includes the same tool as an offline HTML file.</span>
+              <span class="support-button-text">This tool is free online. If it helped your project, you can support me on itch.io. The paid version includes the same tool as a standalone desktop app.</span>
             </span>
           </a>
         </div>
